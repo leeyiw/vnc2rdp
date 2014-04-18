@@ -14,11 +14,26 @@ r2v_rdp_conn_init(int client_fd)
 	}
 	memset(c, 0, sizeof(r2v_rdp_conn_t));
 
+	c->sec = r2v_sec_init(client_fd);
+	if (c->sec == NULL) {
+		goto fail;
+	}
+
 	return c;
 
 fail:
-	if (c != NULL) {
-		free(c);
-	}
+	r2v_rdp_conn_destory(c);
 	return NULL;
+}
+
+void
+r2v_rdp_conn_destory(r2v_rdp_conn_t *c)
+{
+	if (c == NULL) {
+		return;
+	}
+	if (c->sec != NULL) {
+		r2v_sec_destory(c->sec);
+	}
+	free(c);
 }

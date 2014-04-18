@@ -20,6 +20,5 @@ main(int argc, char *argv[])
 		r2v_log_error("accept new rdp connection error");
 	}
 	r2v_log_info("accept new rdp connection success");
-	printf("%x\n", rdp_conn);
 	return 0;
 }
