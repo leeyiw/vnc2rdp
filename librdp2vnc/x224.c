@@ -8,7 +8,7 @@ static int
 r2v_x224_build_conn(int client_fd)
 {
 	packet_t *p = NULL;
-	uint8_t length_indicator = 0, tpdu_code = 0;
+	uint8_t li = 0, tpdu_code = 0;
 	uint8_t type = 0, flags = 0;
 	uint16_t length = 0, requested_protocols = 0;
 
@@ -20,7 +20,7 @@ r2v_x224_build_conn(int client_fd)
 	/* receive Client X.224 Connection Request PDU */
 	r2v_tpkt_recv_pkt(client_fd, p);
 	/* parse X.224 Class 0 Connection Request header */
-	R2V_PACKET_READ_UINT8(p, length_indicator);
+	R2V_PACKET_READ_UINT8(p, li);
 	R2V_PACKET_READ_UINT8(p, tpdu_code);
 	if (tpdu_code != TPDU_CODE_CR) {
 		goto fail;
@@ -91,4 +91,22 @@ r2v_x224_destory(r2v_x224_t *x)
 		return;
 	}
 	free(x);
+}
+
+int
+r2v_x224_recv_data_pkt(int client_fd, packet_t *p)
+{
+	uint8_t li = 0, tpdu_code = 0;
+
+	r2v_tpkt_recv_pkt(client_fd, p);
+	/* parse X.224 data pdu header */
+	R2V_PACKET_READ_UINT8(p, li);
+	R2V_PACKET_READ_UINT8(p, tpdu_code);
+	if (tpdu_code != TPDU_CODE_DT) {
+		goto fail;
+	}
+	R2V_PACKET_SEEK_UINT8(p);
+
+fail:
+	return -1;
 }

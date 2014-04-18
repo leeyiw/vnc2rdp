@@ -4,6 +4,18 @@
 #include "mcs.h"
 
 static int
+r2v_mcs_recv_conn_init_pkt(int client_fd, packet_t *p)
+{
+	if (r2v_x224_recv_data_pkt(client_fd, p) == -1) {
+		goto fail;
+	}
+	return 0;
+
+fail:
+	return -1;
+}
+
+static int
 r2v_mcs_build_conn(int client_fd)
 {
 	return 0;
