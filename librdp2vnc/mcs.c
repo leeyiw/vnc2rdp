@@ -3,6 +3,12 @@
 
 #include "mcs.h"
 
+static int
+r2v_mcs_build_conn(int client_fd)
+{
+	return 0;
+}
+
 r2v_mcs_t *
 r2v_mcs_init(int client_fd)
 {
@@ -13,6 +19,15 @@ r2v_mcs_init(int client_fd)
 		goto fail;
 	}
 	memset(m, 0, sizeof(r2v_mcs_t));
+
+	m->x224 = r2v_x224_init(client_fd);
+	if (m->x224 == NULL) {
+		goto fail;
+	}
+
+	if (-1 == r2v_mcs_build_conn(client_fd)) {
+		goto fail;
+	}
 
 	return m;
 

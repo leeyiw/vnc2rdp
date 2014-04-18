@@ -3,7 +3,7 @@ CC = gcc
 CFLAGS = -c -Wall -fPIC
 DEBUG_FLAGS = -g
 RELEASE_FLAGS = -O2
-OBJS = rdp_server.o rdp_conn.o sec.o mcs.o x224.o
+OBJS = rdp_server.o rdp_conn.o sec.o mcs.o x224.o tpkt.o packet.o
 LDFLAGS = -shared
 
 .PHONY: debug release all clean
@@ -29,7 +29,10 @@ mcs.o: mcs.c mcs.h
 	$(CC) $(CFLAGS) $(INCLUDE) mcs.c
 x224.o: x224.c x224.h
 	$(CC) $(CFLAGS) $(INCLUDE) x224.c
+tpkt.o: tpkt.c tpkt.h
+	$(CC) $(CFLAGS) $(INCLUDE) tpkt.c
+packet.o: packet.c packet.h
+	$(CC) $(CFLAGS) $(INCLUDE) packet.c
 
 clean:
 	-rm -rf $(TARGET) $(OBJS)
-	cd $(LIBRDP2VNC_DIR) && make clean
