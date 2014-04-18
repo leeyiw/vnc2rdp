@@ -40,10 +40,10 @@ r2v_rdp_server_init(const char *ip, uint16_t port)
 	return s;
 
 fail:
-	if (s->fd != 0) {
-		close(s->fd);
-	}
 	if (s != NULL) {
+		if (s->fd != 0) {
+			close(s->fd);
+		}
 		free(s);
 	}
 	return NULL;
@@ -52,4 +52,10 @@ fail:
 r2v_rdp_conn_t *
 r2v_rdp_server_accept(r2v_rdp_server_t *s)
 {
+	int client_fd = 0;
+
+	if ((client_fd = accept(s->fd, NULL, NULL)) == -1) {
+		return NULL;
+	}
+	return r2v_rdp_conn_init(client_fd);
 }

@@ -4,4 +4,6 @@
 typedef struct _r2v_rdp_conn_t {
 } r2v_rdp_conn_t;
 
+extern r2v_rdp_conn_t *r2v_rdp_conn_init(int client_fd);
+
 #endif
