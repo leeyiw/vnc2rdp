@@ -5,12 +5,12 @@
 #include "x224.h"
 
 static int
-r2v_x224_build_conn(int client_fd)
+r2v_x224_build_conn(int client_fd, r2v_x224_t *x)
 {
 	packet_t *p = NULL;
 	uint8_t li = 0, tpdu_code = 0;
 	uint8_t type = 0, flags = 0;
-	uint16_t length = 0, requested_protocols = 0;
+	uint16_t length = 0;
 
 	p = r2v_packet_init(8192);
 	if (p == NULL) {
@@ -36,7 +36,7 @@ r2v_x224_build_conn(int client_fd)
 	if (length != 0x0008) {
 		goto fail;
 	}
-	R2V_PACKET_READ_UINT32_LE(p, requested_protocols);
+	R2V_PACKET_READ_UINT32_LE(p, x->requested_protocols);
 
 	/* build Server X.224 Connection Confirm PDU */
 	r2v_packet_reset(p);
@@ -73,7 +73,7 @@ r2v_x224_init(int client_fd)
 	}
 	memset(x, 0, sizeof(r2v_x224_t));
 
-	if (-1 == r2v_x224_build_conn(client_fd)) {
+	if (-1 == r2v_x224_build_conn(client_fd, x)) {
 		goto fail;
 	}
 

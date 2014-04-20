@@ -15,6 +15,9 @@
 #define CS_SECURITY					0xC002
 #define CS_NET						0xC003
 #define CS_CLUSTER					0xC004
+#define SC_CORE						0x0C01
+#define SC_SECURITY					0x0C02
+#define SC_NET						0x0C03
 
 #define MAX_CHANNELS_ALLOWED		31
 

@@ -39,6 +39,7 @@
 #define R2V_PACKET_READ_N(p, v, n) \
 	do { \
 		memcpy((v), (p)->current, (n)); \
+		(p)->current += n; \
 	} while (0)
 
 #define R2V_PACKET_WRITE_UINT8(p, v) \
@@ -59,6 +60,11 @@
 	do { \
 		*((uint32_t *)((p)->current)) = (uint32_t)v; \
 		(p)->current += sizeof(uint32_t); \
+	} while (0)
+#define R2V_PACKET_WRITE_N(p, v, n) \
+	do { \
+		memcpy((p)->current, (v), (n)); \
+		(p)->current += n; \
 	} while (0)
 
 #define R2V_PACKET_SEEK(p, n)			(p)->current += (n)

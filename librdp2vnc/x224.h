@@ -16,6 +16,7 @@
 #include "packet.h"
 
 typedef struct _r2v_x224_t {
+	uint32_t requested_protocols;
 } r2v_x224_t;
 
 extern r2v_x224_t *r2v_x224_init(int client_fd);

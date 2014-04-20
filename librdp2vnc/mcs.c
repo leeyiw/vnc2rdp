@@ -145,6 +145,38 @@ fail:
 }
 
 static int
+r2v_mcs_send_conn_resp_pkt(int client_fd, packet_t *p, r2v_mcs_t *m)
+{
+	packet_t *u = NULL;
+	uint8_t gccccrsp_header[] = {
+		0x00, 0x05, 0x00, 0x14, 0x7c, 0x00, 0x01, 0x2a, 0x14, 0x76,
+		0x0a, 0x01, 0x01, 0x00, 0x01, 0xc0, 0x00, 0x4d, 0x63, 0x44,
+		0x6e
+	};
+	uint16_t channel_count_even = m->channel_count + (m->channel_count & 1);
+
+	u = r2v_packet_init(4096);
+	if (u == NULL) {
+		goto fail;
+	}
+	/* pack userData first */
+	R2V_PACKET_WRITE_N(u, gccccrsp_header, sizeof(gccccrsp_header));
+	R2V_PACKET_WRITE_UINT16_BE(u, 0x80FC + channel_count_even);
+	/* Server Core Data */
+	R2V_PACKET_WRITE_UINT16_LE(u, SC_CORE);
+	R2V_PACKET_WRITE_UINT16_LE(u, 16);
+	R2V_PACKET_WRITE_UINT32_LE(u, 0x00080004);
+	R2V_PACKET_WRITE_UINT32_LE(u, m->x224->requested_protocols);
+	R2V_PACKET_WRITE_UINT32_LE(u, 0x00000000);
+
+	return 0;
+
+fail:
+	r2v_packet_destory(u);
+	return -1;
+}
+
+static int
 r2v_mcs_build_conn(int client_fd, r2v_mcs_t *m)
 {
 	packet_t *p = NULL;
@@ -155,6 +187,9 @@ r2v_mcs_build_conn(int client_fd, r2v_mcs_t *m)
 	}
 
 	if (r2v_mcs_recv_conn_init_pkt(client_fd, p, m) == -1) {
+		goto fail;
+	}
+	if (r2v_mcs_send_conn_resp_pkt(client_fd, p, m) == -1) {
 		goto fail;
 	}
 
