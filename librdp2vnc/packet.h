@@ -68,7 +68,7 @@
 	} while (0)
 
 #define R2V_PACKET_SEEK(p, n)			(p)->current += (n)
-#define R2V_PACKET_SEEK_UINT8(p)		R2V_PACKET_SEEK(p, 1)
+#define R2V_PACKET_SEEK_UINT8(p)		R2V_PACKET_SEEK(p, sizeof(uint8_t))
 
 typedef struct _packet_t {
 	uint16_t max_len;
@@ -80,5 +80,6 @@ typedef struct _packet_t {
 extern packet_t *r2v_packet_init(int max_len);
 extern void r2v_packet_reset(packet_t *p);
 extern void r2v_packet_destory(packet_t *p);
+extern void r2v_packet_end(packet_t *p);
 
 #endif

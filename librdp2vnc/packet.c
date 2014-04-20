@@ -50,3 +50,9 @@ r2v_packet_destory(packet_t *p)
 	}
 	free(p);
 }
+
+void
+r2v_packet_end(packet_t *p)
+{
+	p->total_len = p->current - p->data;
+}

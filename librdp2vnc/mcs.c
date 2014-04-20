@@ -2,6 +2,8 @@
 #include <string.h>
 
 #include "mcs.h"
+#include "tpkt.h"
+#include "sec.h"
 
 static int
 r2v_mcs_parse_ber_encoding(packet_t *p, uint16_t identifier, uint16_t *length)
@@ -145,6 +147,26 @@ fail:
 }
 
 static int
+r2v_mcs_write_ber_encoding(packet_t *p, uint16_t identifier, uint16_t length)
+{
+	/* BER-encoding see http://en.wikipedia.org/wiki/X.690 */
+	uint16_t len, i, l;
+
+	if (identifier > 0xFF) {
+		R2V_PACKET_WRITE_UINT16_BE(p, identifier);
+	} else {
+		R2V_PACKET_WRITE_UINT8(p, identifier);
+	}
+	if (length >= 0x80) {
+		R2V_PACKET_WRITE_UINT8(p, 0x82);
+		R2V_PACKET_WRITE_UINT16_BE(p, length);
+	} else {
+		R2V_PACKET_WRITE_UINT8(p, length);
+	}
+	return 0;
+}
+
+static int
 r2v_mcs_send_conn_resp_pkt(int client_fd, packet_t *p, r2v_mcs_t *m)
 {
 	packet_t *u = NULL;
@@ -153,21 +175,80 @@ r2v_mcs_send_conn_resp_pkt(int client_fd, packet_t *p, r2v_mcs_t *m)
 		0x0a, 0x01, 0x01, 0x00, 0x01, 0xc0, 0x00, 0x4d, 0x63, 0x44,
 		0x6e
 	};
+	uint16_t i = 0;
 	uint16_t channel_count_even = m->channel_count + (m->channel_count & 1);
 
 	u = r2v_packet_init(4096);
 	if (u == NULL) {
 		goto fail;
 	}
-	/* pack userData first */
+
+	/* GCC layer header */
 	R2V_PACKET_WRITE_N(u, gccccrsp_header, sizeof(gccccrsp_header));
 	R2V_PACKET_WRITE_UINT16_BE(u, 0x80FC + channel_count_even);
+
 	/* Server Core Data */
 	R2V_PACKET_WRITE_UINT16_LE(u, SC_CORE);
 	R2V_PACKET_WRITE_UINT16_LE(u, 16);
 	R2V_PACKET_WRITE_UINT32_LE(u, 0x00080004);
 	R2V_PACKET_WRITE_UINT32_LE(u, m->x224->requested_protocols);
 	R2V_PACKET_WRITE_UINT32_LE(u, 0x00000000);
+
+	/* Server Security Data */
+	R2V_PACKET_WRITE_UINT16_LE(u, SC_SECURITY);
+	R2V_PACKET_WRITE_UINT16_LE(u, 20);
+	R2V_PACKET_WRITE_UINT32_LE(u, ENCRYPTION_METHOD_NONE);
+	R2V_PACKET_WRITE_UINT32_LE(u, ENCRYPTION_LEVEL_NONE);
+	R2V_PACKET_WRITE_UINT32_LE(u, 0);
+	R2V_PACKET_WRITE_UINT32_LE(u, 0);
+
+	/* Server Network Data */
+	R2V_PACKET_WRITE_UINT16_LE(u, SC_NET);
+	R2V_PACKET_WRITE_UINT16_LE(u, 20);
+	R2V_PACKET_WRITE_UINT16_LE(u, MCS_CHANNEL_ID);
+	R2V_PACKET_WRITE_UINT16_LE(u, m->channel_count);
+	for (i = 0; i < channel_count_even; i++) {
+		if (i < m->channel_count) {
+			R2V_PACKET_WRITE_UINT16_LE(u, MCS_CHANNEL_ID + i + 1);
+		} else {
+			R2V_PACKET_WRITE_UINT16_LE(u, 0);
+		}
+	}
+
+	/* finish construct user data */
+	r2v_packet_end(u);
+
+	/* start construct entire packet */
+	r2v_packet_reset(p);
+	R2V_PACKET_SEEK(p, TPKT_HEADER_LEN + X224_DATA_HEADER_LEN);
+	r2v_mcs_write_ber_encoding(p, BER_TAG_CONNECT_RESPONSE, u->total_len + 38);
+	r2v_mcs_write_ber_encoding(p, BER_TAG_ENUMERATED, 1);
+	R2V_PACKET_WRITE_UINT8(p, 0);
+	r2v_mcs_write_ber_encoding(p, BER_TAG_INTEGER, 1);
+	R2V_PACKET_WRITE_UINT8(p, 0);
+	r2v_mcs_write_ber_encoding(p, BER_TAG_DOMAIN_PARAMETERS, 26);
+	r2v_mcs_write_ber_encoding(p, BER_TAG_INTEGER, 1);
+	R2V_PACKET_WRITE_UINT8(p, 34);
+	r2v_mcs_write_ber_encoding(p, BER_TAG_INTEGER, 1);
+	R2V_PACKET_WRITE_UINT8(p, 3);
+	r2v_mcs_write_ber_encoding(p, BER_TAG_INTEGER, 1);
+	R2V_PACKET_WRITE_UINT8(p, 0);
+	r2v_mcs_write_ber_encoding(p, BER_TAG_INTEGER, 1);
+	R2V_PACKET_WRITE_UINT8(p, 1);
+	r2v_mcs_write_ber_encoding(p, BER_TAG_INTEGER, 1);
+	R2V_PACKET_WRITE_UINT8(p, 0);
+	r2v_mcs_write_ber_encoding(p, BER_TAG_INTEGER, 1);
+	R2V_PACKET_WRITE_UINT8(p, 1);
+	r2v_mcs_write_ber_encoding(p, BER_TAG_INTEGER, 3);
+	R2V_PACKET_WRITE_UINT8(p, 0x00);
+	R2V_PACKET_WRITE_UINT8(p, 0xFF);
+	R2V_PACKET_WRITE_UINT8(p, 0xF8);
+	r2v_mcs_write_ber_encoding(p, BER_TAG_INTEGER, 1);
+	R2V_PACKET_WRITE_UINT8(p, 2);
+	r2v_mcs_write_ber_encoding(p, BER_TAG_OCTET_STRING, u->total_len);
+	R2V_PACKET_WRITE_N(p, u->data, u->total_len);
+
+	r2v_x224_send_data_pkt(client_fd, p);
 
 	return 0;
 
@@ -193,6 +274,7 @@ r2v_mcs_build_conn(int client_fd, r2v_mcs_t *m)
 		goto fail;
 	}
 
+	r2v_packet_destory(p);
 	return 0;
 
 fail:

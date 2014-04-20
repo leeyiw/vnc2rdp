@@ -1,8 +1,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "tpkt.h"
 #include "x224.h"
+#include "tpkt.h"
 
 static int
 r2v_x224_build_conn(int client_fd, r2v_x224_t *x)
@@ -18,7 +18,9 @@ r2v_x224_build_conn(int client_fd, r2v_x224_t *x)
 	}
 
 	/* receive Client X.224 Connection Request PDU */
-	r2v_tpkt_recv_pkt(client_fd, p);
+	if (r2v_tpkt_recv_pkt(client_fd, p) == -1) {
+		goto fail;
+	}
 	/* parse X.224 Class 0 Connection Request header */
 	R2V_PACKET_READ_UINT8(p, li);
 	R2V_PACKET_READ_UINT8(p, tpdu_code);
@@ -98,7 +100,9 @@ r2v_x224_recv_data_pkt(int client_fd, packet_t *p)
 {
 	uint8_t li = 0, tpdu_code = 0;
 
-	r2v_tpkt_recv_pkt(client_fd, p);
+	if (r2v_tpkt_recv_pkt(client_fd, p) == -1) {
+		goto fail;
+	}
 	/* parse X.224 data pdu header */
 	R2V_PACKET_READ_UINT8(p, li);
 	R2V_PACKET_READ_UINT8(p, tpdu_code);
@@ -111,4 +115,22 @@ r2v_x224_recv_data_pkt(int client_fd, packet_t *p)
 
 fail:
 	return -1;
+}
+
+int
+r2v_x224_send_data_pkt(int client_fd, packet_t *p)
+{
+	uint8_t *current = NULL;
+
+	/* save current pointer */
+	current = p->current;
+	/* fill X.224 data pdu header */
+	p->current = p->data + TPKT_HEADER_LEN;
+	R2V_PACKET_WRITE_UINT8(p, 2);
+	R2V_PACKET_WRITE_UINT8(p, TPDU_CODE_DT);
+	R2V_PACKET_WRITE_UINT8(p, 0x80);
+	/* restore current pointer */
+	p->current = current;
+
+	return r2v_tpkt_send_pkt(client_fd, p);
 }

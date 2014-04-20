@@ -4,8 +4,11 @@
 #include "x224.h"
 
 #define BER_TAG_CONNECT_INITIAL		0x7F65
+#define BER_TAG_CONNECT_RESPONSE	0x7F66
 #define BER_TAG_BOOLEAN				0x01
+#define BER_TAG_INTEGER				0x02
 #define BER_TAG_OCTET_STRING		0x04
+#define BER_TAG_ENUMERATED			0x0A
 #define BER_TAG_DOMAIN_PARAMETERS	0x30
 
 #define GCCCCRQ_HEADER_LEN			23
@@ -20,6 +23,7 @@
 #define SC_NET						0x0C03
 
 #define MAX_CHANNELS_ALLOWED		31
+#define MCS_CHANNEL_ID				1003
 
 typedef struct _channel_def_t {
 	char name[8];
