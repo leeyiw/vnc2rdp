@@ -10,7 +10,7 @@ r2v_mcs_parse_ber_encoding(packet_t *p, uint16_t identifier, uint16_t *length)
 	uint16_t id, len, i, l;
 
 	if (identifier > 0xFF) {
-		R2V_PACKET_READ_UINT16_LE(p, id);
+		R2V_PACKET_READ_UINT16_BE(p, id);
 	} else {
 		R2V_PACKET_READ_UINT8(p, id);
 	}
@@ -20,7 +20,6 @@ r2v_mcs_parse_ber_encoding(packet_t *p, uint16_t identifier, uint16_t *length)
 	R2V_PACKET_READ_UINT8(p, len);
 	if (len & 0x80) {
 		len &= ~0x80;
-		// TODO finish this
 		*length = 0;
 		for (i = 0; i < len; i++) {
 			R2V_PACKET_READ_UINT8(p, l);
@@ -33,56 +32,23 @@ r2v_mcs_parse_ber_encoding(packet_t *p, uint16_t identifier, uint16_t *length)
 }
 
 static int
-r2v_mcs_recv_conn_init_pkt(int client_fd, packet_t *p)
+r2v_mcs_parse_client_network_data(packet_t *p, r2v_mcs_t *m)
 {
-	int length = 0;
+	uint16_t channel_def_array_size = 0;
 
-	if (r2v_x224_recv_data_pkt(client_fd, p) == -1) {
+	R2V_PACKET_READ_UINT32_LE(p, m->channel_count);
+	if (m->channel_count > MAX_CHANNELS_ALLOWED) {
 		goto fail;
 	}
-	/* parse connect-initial header */
-	if (r2v_mcs_parse_ber_encoding(p, BER_TAG_CONNECT_INITIAL, &length) == -1) {
+	channel_def_array_size = m->channel_count * sizeof(channel_def_t);
+	if (!R2V_PACKET_READ_REMAIN(p, channel_def_array_size)) {
 		goto fail;
 	}
-	/* parse callingDomainSelector */
-	if (r2v_mcs_parse_ber_encoding(p, BER_TAG_OCTET_STRING, &length) == -1) {
-		goto fail;
+	if (m->channel_count != 0) {
+		m->channel_def_array = (channel_def_t *)malloc(channel_def_array_size);
+		R2V_PACKET_READ_N(p, m->channel_def_array, channel_def_array_size);
 	}
-	R2V_PACKET_SEEK(p, length);
-	/* parse calledDomainSelector */
-	if (r2v_mcs_parse_ber_encoding(p, BER_TAG_OCTET_STRING, &length) == -1) {
-		goto fail;
-	}
-	R2V_PACKET_SEEK(p, length);
-	/* parse calledDomainSelector */
-	if (r2v_mcs_parse_ber_encoding(p, BER_TAG_OCTET_STRING, &length) == -1) {
-		goto fail;
-	}
-	R2V_PACKET_SEEK(p, length);
-	/* parse upwardFlag */
-	if (r2v_mcs_parse_ber_encoding(p, BER_TAG_BOOLEAN, &length) == -1) {
-		goto fail;
-	}
-	R2V_PACKET_SEEK(p, length);
-	/* parse targetParameters */
-	if (r2v_mcs_parse_ber_encoding(p, BER_TAG_DOMAIN_PARAMETERS, &length)
-		== -1) {
-		goto fail;
-	}
-	R2V_PACKET_SEEK(p, length);
-	/* parse minimumParameters */
-	if (r2v_mcs_parse_ber_encoding(p, BER_TAG_DOMAIN_PARAMETERS, &length)
-		== -1) {
-		goto fail;
-	}
-	R2V_PACKET_SEEK(p, length);
-	/* parse maximumParameters */
-	if (r2v_mcs_parse_ber_encoding(p, BER_TAG_DOMAIN_PARAMETERS, &length)
-		== -1) {
-		goto fail;
-	}
-	R2V_PACKET_SEEK(p, length);
-	/* TODO parse GCC pdu and mcs data */
+
 	return 0;
 
 fail:
@@ -90,7 +56,96 @@ fail:
 }
 
 static int
-r2v_mcs_build_conn(int client_fd)
+r2v_mcs_recv_conn_init_pkt(int client_fd, packet_t *p, r2v_mcs_t *m)
+{
+	uint16_t len = 0;
+	uint8_t *header = NULL;
+	uint16_t type = 0, length;
+
+	if (r2v_x224_recv_data_pkt(client_fd, p) == -1) {
+		goto fail;
+	}
+	/* parse connect-initial header */
+	if (r2v_mcs_parse_ber_encoding(p, BER_TAG_CONNECT_INITIAL, &len) == -1) {
+		goto fail;
+	}
+	/* parse callingDomainSelector */
+	if (r2v_mcs_parse_ber_encoding(p, BER_TAG_OCTET_STRING, &len) == -1) {
+		goto fail;
+	}
+	R2V_PACKET_SEEK(p, len);
+	/* parse calledDomainSelector */
+	if (r2v_mcs_parse_ber_encoding(p, BER_TAG_OCTET_STRING, &len) == -1) {
+		goto fail;
+	}
+	R2V_PACKET_SEEK(p, len);
+	/* parse upwardFlag */
+	if (r2v_mcs_parse_ber_encoding(p, BER_TAG_BOOLEAN, &len) == -1) {
+		goto fail;
+	}
+	R2V_PACKET_SEEK(p, len);
+	/* parse targetParameters */
+	if (r2v_mcs_parse_ber_encoding(p, BER_TAG_DOMAIN_PARAMETERS, &len)
+		== -1) {
+		goto fail;
+	}
+	R2V_PACKET_SEEK(p, len);
+	/* parse minimumParameters */
+	if (r2v_mcs_parse_ber_encoding(p, BER_TAG_DOMAIN_PARAMETERS, &len)
+		== -1) {
+		goto fail;
+	}
+	R2V_PACKET_SEEK(p, len);
+	/* parse maximumParameters */
+	if (r2v_mcs_parse_ber_encoding(p, BER_TAG_DOMAIN_PARAMETERS, &len)
+		== -1) {
+		goto fail;
+	}
+	R2V_PACKET_SEEK(p, len);
+	/* parse userData */
+	if (r2v_mcs_parse_ber_encoding(p, BER_TAG_OCTET_STRING, &len) == -1) {
+		goto fail;
+	}
+	/* parse data segments */
+	if (!R2V_PACKET_READ_REMAIN(p, GCCCCRQ_HEADER_LEN)) {
+		goto fail;
+	}
+	R2V_PACKET_SEEK(p, GCCCCRQ_HEADER_LEN);
+	while (R2V_PACKET_READ_REMAIN(p, TS_UD_HEADER_LEN)) {
+		header = p->current;
+		/* parse user data header */
+		R2V_PACKET_READ_UINT16_LE(p, type);
+		R2V_PACKET_READ_UINT16_LE(p, length);
+		if (length < TS_UD_HEADER_LEN ||
+			!R2V_PACKET_READ_REMAIN(p, length - TS_UD_HEADER_LEN)) {
+			goto fail;
+		}
+		switch (type) {
+		case CS_CORE:
+			break;
+		case CS_SECURITY:
+			break;
+		case CS_NET:
+			if (r2v_mcs_parse_client_network_data(p, m) == -1) {
+				goto fail;
+			}
+			break;
+		case CS_CLUSTER:
+			break;
+		default:
+			break;
+		}
+		p->current = header + length;
+	}
+
+	return 0;
+
+fail:
+	return -1;
+}
+
+static int
+r2v_mcs_build_conn(int client_fd, r2v_mcs_t *m)
 {
 	packet_t *p = NULL;
 
@@ -99,7 +154,7 @@ r2v_mcs_build_conn(int client_fd)
 		goto fail;
 	}
 
-	if (r2v_mcs_recv_conn_init_pkt(client_fd, p) == -1) {
+	if (r2v_mcs_recv_conn_init_pkt(client_fd, p, m) == -1) {
 		goto fail;
 	}
 
@@ -126,7 +181,7 @@ r2v_mcs_init(int client_fd)
 		goto fail;
 	}
 
-	if (-1 == r2v_mcs_build_conn(client_fd)) {
+	if (-1 == r2v_mcs_build_conn(client_fd, m)) {
 		goto fail;
 	}
 
@@ -145,6 +200,9 @@ r2v_mcs_destory(r2v_mcs_t *m)
 	}
 	if (m->x224 != NULL) {
 		r2v_x224_destory(m->x224);
+	}
+	if (m->channel_def_array != NULL) {
+		free(m->channel_def_array);
 	}
 	free(m);
 }

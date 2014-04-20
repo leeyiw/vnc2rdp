@@ -8,8 +8,27 @@
 #define BER_TAG_OCTET_STRING		0x04
 #define BER_TAG_DOMAIN_PARAMETERS	0x30
 
+#define GCCCCRQ_HEADER_LEN			23
+#define TS_UD_HEADER_LEN			4
+
+#define CS_CORE						0xC001
+#define CS_SECURITY					0xC002
+#define CS_NET						0xC003
+#define CS_CLUSTER					0xC004
+
+#define MAX_CHANNELS_ALLOWED		31
+
+typedef struct _channel_def_t {
+	char name[8];
+	uint32_t options;
+} channel_def_t;
+
 typedef struct _r2v_mcs_t {
 	r2v_x224_t *x224;
+
+	/* client network data */
+	uint32_t channel_count;
+	channel_def_t *channel_def_array;
 } r2v_mcs_t;
 
 extern r2v_mcs_t *r2v_mcs_init(int client_fd);

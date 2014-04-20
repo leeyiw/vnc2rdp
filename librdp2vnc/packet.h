@@ -3,6 +3,9 @@
 
 #include <stdint.h>
 
+#define R2V_PACKET_READ_REMAIN(p, n) \
+	((p)->current + n <= (p)->data + (p)->total_len)
+
 #define R2V_PACKET_READ_UINT8(p, v) \
 	do { \
 		(v) = *(p)->current++; \
@@ -33,6 +36,10 @@
 		(v) = *((uint32_t *)((p)->current)); \
 		(p)->current += sizeof(uint32_t); \
 	} while (0)
+#define R2V_PACKET_READ_N(p, v, n) \
+	do { \
+		memcpy((v), (p)->current, (n)); \
+	} while (0)
 
 #define R2V_PACKET_WRITE_UINT8(p, v) \
 	do { \
@@ -54,8 +61,8 @@
 		(p)->current += sizeof(uint32_t); \
 	} while (0)
 
-#define R2V_PACKET_SEEK(p, n)		(p)->current += (n)
-#define R2V_PACKET_SEEK_UINT8(p)	R2V_PACKET_SEEK(p, 1)
+#define R2V_PACKET_SEEK(p, n)			(p)->current += (n)
+#define R2V_PACKET_SEEK_UINT8(p)		R2V_PACKET_SEEK(p, 1)
 
 typedef struct _packet_t {
 	uint16_t max_len;

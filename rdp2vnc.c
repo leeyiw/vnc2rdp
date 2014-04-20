@@ -21,7 +21,7 @@ main(int argc, char *argv[])
 		rdp_conn = r2v_rdp_server_accept(rdp_server);
 		if (rdp_conn == NULL) {
 			r2v_log_error("accept new rdp connection error");
-			exit(EXIT_FAILURE);
+			continue;
 		}
 		r2v_log_info("accept new rdp connection success");
 		r2v_rdp_conn_destory(rdp_conn);

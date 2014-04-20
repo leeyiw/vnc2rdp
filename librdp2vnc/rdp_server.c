@@ -11,6 +11,7 @@ r2v_rdp_server_init(const char *ip, uint16_t port)
 {
 	r2v_rdp_server_t *s = NULL;
 	struct sockaddr_in s_addr;
+	int optval = 1;
 
 	s = (r2v_rdp_server_t *)malloc(sizeof(r2v_rdp_server_t));
 	if (s == NULL) {
@@ -19,6 +20,12 @@ r2v_rdp_server_init(const char *ip, uint16_t port)
 	memset(s, 0, sizeof(r2v_rdp_server_t));
 
 	if ((s->fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+		goto fail;
+	}
+
+	/* set address reuse */
+	if (setsockopt(s->fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval))
+		== -1) {
 		goto fail;
 	}
 

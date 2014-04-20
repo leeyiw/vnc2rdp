@@ -107,6 +107,8 @@ r2v_x224_recv_data_pkt(int client_fd, packet_t *p)
 	}
 	R2V_PACKET_SEEK_UINT8(p);
 
+	return 0;
+
 fail:
 	return -1;
 }
