@@ -175,7 +175,7 @@ r2v_mcs_send_conn_resp_pkt(int client_fd, packet_t *p, r2v_mcs_t *m)
 		0x0a, 0x01, 0x01, 0x00, 0x01, 0xc0, 0x00, 0x4d, 0x63, 0x44,
 		0x6e
 	};
-	uint16_t i = 0;
+	uint16_t i = 0, mcs_rsp_len = 0;
 	uint16_t channel_count_even = m->channel_count + (m->channel_count & 1);
 
 	u = r2v_packet_init(4096);
@@ -204,7 +204,7 @@ r2v_mcs_send_conn_resp_pkt(int client_fd, packet_t *p, r2v_mcs_t *m)
 
 	/* Server Network Data */
 	R2V_PACKET_WRITE_UINT16_LE(u, SC_NET);
-	R2V_PACKET_WRITE_UINT16_LE(u, 20);
+	R2V_PACKET_WRITE_UINT16_LE(u, 8 + 2 * channel_count_even);
 	R2V_PACKET_WRITE_UINT16_LE(u, MCS_CHANNEL_ID);
 	R2V_PACKET_WRITE_UINT16_LE(u, m->channel_count);
 	for (i = 0; i < channel_count_even; i++) {
@@ -221,7 +221,8 @@ r2v_mcs_send_conn_resp_pkt(int client_fd, packet_t *p, r2v_mcs_t *m)
 	/* start construct entire packet */
 	r2v_packet_reset(p);
 	R2V_PACKET_SEEK(p, TPKT_HEADER_LEN + X224_DATA_HEADER_LEN);
-	r2v_mcs_write_ber_encoding(p, BER_TAG_CONNECT_RESPONSE, u->total_len + 38);
+	mcs_rsp_len = u->total_len + (u->total_len > 0x80 ? 38 : 36);
+	r2v_mcs_write_ber_encoding(p, BER_TAG_CONNECT_RESPONSE, mcs_rsp_len);
 	r2v_mcs_write_ber_encoding(p, BER_TAG_ENUMERATED, 1);
 	R2V_PACKET_WRITE_UINT8(p, 0);
 	r2v_mcs_write_ber_encoding(p, BER_TAG_INTEGER, 1);
