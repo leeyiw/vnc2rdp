@@ -10,6 +10,8 @@ r2v_tpkt_recv_pkt(int client_fd, packet_t *p)
 	int n = 0;
 	uint8_t tpkt_version = 0;
 
+	r2v_packet_reset(p);
+
 	n = recv(client_fd, p->current, TPKT_HEADER_LEN, MSG_WAITALL);
 	if (n == -1 || n == 0) {
 		goto fail;

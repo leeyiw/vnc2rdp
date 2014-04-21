@@ -251,10 +251,59 @@ r2v_mcs_send_conn_resp_pkt(int client_fd, packet_t *p, r2v_mcs_t *m)
 
 	r2v_x224_send_data_pkt(client_fd, p);
 
+	r2v_packet_destory(u);
 	return 0;
 
 fail:
 	r2v_packet_destory(u);
+	return -1;
+}
+
+static int
+r2v_mcs_recv_erect_domain_req_pkt(int client_fd, packet_t *p, r2v_mcs_t *m)
+{
+	uint8_t choice;
+
+	r2v_packet_reset(p);
+
+	if (r2v_x224_recv_data_pkt(client_fd, p) == -1) {
+		goto fail;
+	}
+	if (!R2V_PACKET_READ_REMAIN(p, sizeof(uint8_t))) {
+		goto fail;
+	}
+	R2V_PACKET_READ_UINT8(p, choice);
+	if ((choice >> 2) != MCS_ERECT_DOMAIN_REQUEST) {
+		goto fail;
+	}
+
+	return 0;
+
+fail:
+	return -1;
+}
+
+static int
+r2v_mcs_recv_attach_user_req_pkt(int client_fd, packet_t *p, r2v_mcs_t *m)
+{
+	uint8_t choice;
+
+	r2v_packet_reset(p);
+
+	if (r2v_x224_recv_data_pkt(client_fd, p) == -1) {
+		goto fail;
+	}
+	if (!R2V_PACKET_READ_REMAIN(p, sizeof(uint8_t))) {
+		goto fail;
+	}
+	R2V_PACKET_READ_UINT8(p, choice);
+	if ((choice >> 2) != MCS_ATTACH_USER_REQUEST) {
+		goto fail;
+	}
+
+	return 0;
+
+fail:
 	return -1;
 }
 
@@ -272,6 +321,12 @@ r2v_mcs_build_conn(int client_fd, r2v_mcs_t *m)
 		goto fail;
 	}
 	if (r2v_mcs_send_conn_resp_pkt(client_fd, p, m) == -1) {
+		goto fail;
+	}
+	if (r2v_mcs_recv_erect_domain_req_pkt(client_fd, p, m) == -1) {
+		goto fail;
+	}
+	if (r2v_mcs_recv_attach_user_req_pkt(client_fd, p, m) == -1) {
 		goto fail;
 	}
 
