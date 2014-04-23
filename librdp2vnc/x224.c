@@ -9,7 +9,7 @@ r2v_x224_build_conn(int client_fd, r2v_x224_t *x)
 {
 	packet_t *p = NULL;
 	uint8_t li = 0, tpdu_code = 0;
-	uint8_t type = 0, flags = 0;
+	uint8_t terminated = 0, type = 0, flags = 0;
 	uint16_t length = 0;
 
 	p = r2v_packet_init(8192);
@@ -28,17 +28,51 @@ r2v_x224_build_conn(int client_fd, r2v_x224_t *x)
 		goto fail;
 	}
 	R2V_PACKET_SEEK(p, 5);
-	/* parse RDP Negotiation Request */
-	R2V_PACKET_READ_UINT8(p, type);
-	if (type != TYPE_RDP_NEG_REQ) {
+	/* see if it is routingToken or cookie field */
+	if (R2V_PACKET_READ_REMAIN(p, strlen(X224_ROUTING_TOKEN_PREFIX)) &&
+		!strncmp((const char *)p->current, X224_ROUTING_TOKEN_PREFIX,
+				 strlen(X224_ROUTING_TOKEN_PREFIX))) {
+		R2V_PACKET_SEEK(p, strlen(X224_ROUTING_TOKEN_PREFIX));
+		while (R2V_PACKET_READ_REMAIN(p, 2)) {
+			if (p->current[0] == '\r' && p->current[1] == '\n') {
+				R2V_PACKET_SEEK(p, 2);
+				terminated = 1;
+				break;
+			}
+			p->current++;
+		}
+	} else if (R2V_PACKET_READ_REMAIN(p, strlen(X224_COOKIE_PREFIX)) &&
+			   !strncmp((const char *)p->current, X224_COOKIE_PREFIX,
+					    strlen(X224_COOKIE_PREFIX))) {
+		R2V_PACKET_SEEK(p, strlen(X224_COOKIE_PREFIX));
+		while (R2V_PACKET_READ_REMAIN(p, 2)) {
+			if (p->current[0] == '\r' && p->current[1] == '\n') {
+				R2V_PACKET_SEEK(p, 2);
+				terminated = 1;
+				break;
+			}
+			p->current++;
+		}
+	} else {
+		terminated = 1;
+	}
+	if (!terminated) {
 		goto fail;
 	}
-	R2V_PACKET_READ_UINT8(p, flags);
-	R2V_PACKET_READ_UINT16_LE(p, length);
-	if (length != 0x0008) {
-		goto fail;
+
+	/* parse RDP Negotiation Request if exists */
+	if (R2V_PACKET_READ_REMAIN(p, 8)) {
+		R2V_PACKET_READ_UINT8(p, type);
+		if (type != TYPE_RDP_NEG_REQ) {
+			goto fail;
+		}
+		R2V_PACKET_READ_UINT8(p, flags);
+		R2V_PACKET_READ_UINT16_LE(p, length);
+		if (length != 0x0008) {
+			goto fail;
+		}
+		R2V_PACKET_READ_UINT32_LE(p, x->requested_protocols);
 	}
-	R2V_PACKET_READ_UINT32_LE(p, x->requested_protocols);
 
 	/* build Server X.224 Connection Confirm PDU */
 	r2v_packet_reset(p);

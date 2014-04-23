@@ -185,7 +185,8 @@ r2v_mcs_send_conn_resp_pkt(int client_fd, packet_t *p, r2v_mcs_t *m)
 
 	/* GCC layer header */
 	R2V_PACKET_WRITE_N(u, gccccrsp_header, sizeof(gccccrsp_header));
-	R2V_PACKET_WRITE_UINT16_BE(u, 0x80FC + channel_count_even);
+	/* next content length */
+	R2V_PACKET_WRITE_UINT8(u, 0x2C + channel_count_even * 2);
 
 	/* Server Core Data */
 	R2V_PACKET_WRITE_UINT16_LE(u, SC_CORE);
