@@ -265,8 +265,6 @@ r2v_mcs_recv_erect_domain_req_pkt(int client_fd, packet_t *p, r2v_mcs_t *m)
 {
 	uint8_t choice;
 
-	r2v_packet_reset(p);
-
 	if (r2v_x224_recv_data_pkt(client_fd, p) == -1) {
 		goto fail;
 	}
@@ -285,11 +283,9 @@ fail:
 }
 
 static int
-r2v_mcs_recv_attach_user_req_pkt(int client_fd, packet_t *p, r2v_mcs_t *m)
+r2v_mcs_recv_attach_user_request_pkt(int client_fd, packet_t *p, r2v_mcs_t *m)
 {
 	uint8_t choice;
-
-	r2v_packet_reset(p);
 
 	if (r2v_x224_recv_data_pkt(client_fd, p) == -1) {
 		goto fail;
@@ -309,8 +305,36 @@ fail:
 }
 
 static int
+r2v_mcs_send_attach_user_confirm_pkt(int client_fd, packet_t *p, r2v_mcs_t *m)
+{
+	r2v_packet_reset(p);
+	R2V_PACKET_SEEK(p, TPKT_HEADER_LEN + X224_DATA_HEADER_LEN);
+
+	R2V_PACKET_WRITE_UINT8(p, (MCS_ATTACH_USER_CONFIRM << 2) | 2);
+	R2V_PACKET_WRITE_UINT8(p, 0);
+	/* User Channel ID */
+	R2V_PACKET_WRITE_UINT16_BE(p, m->channel_count + 3);
+
+	return r2v_x224_send_data_pkt(client_fd, p);
+}
+
+static int
+r2v_mcs_join_channel(int client_fd, packet_t *p, r2v_mcs_t *m, uint16_t id)
+{
+	if (r2v_x224_recv_data_pkt(client_fd, p) == -1) {
+		goto fail;
+	}
+
+	return 0;
+
+fail:
+	return -1;
+}
+
+static int
 r2v_mcs_build_conn(int client_fd, r2v_mcs_t *m)
 {
+	uint16_t i = 0;
 	packet_t *p = NULL;
 
 	p = r2v_packet_init(8192);
@@ -327,8 +351,25 @@ r2v_mcs_build_conn(int client_fd, r2v_mcs_t *m)
 	if (r2v_mcs_recv_erect_domain_req_pkt(client_fd, p, m) == -1) {
 		goto fail;
 	}
-	if (r2v_mcs_recv_attach_user_req_pkt(client_fd, p, m) == -1) {
+	if (r2v_mcs_recv_attach_user_request_pkt(client_fd, p, m) == -1) {
 		goto fail;
+	}
+	if (r2v_mcs_send_attach_user_confirm_pkt(client_fd, p, m) == -1) {
+		goto fail;
+	}
+	/* User Channel */
+	if (r2v_mcs_join_channel(client_fd, p, m) == -1) {
+		goto fail;
+	}
+	/* MCS I/O Channel */
+	if (r2v_mcs_join_channel(client_fd, p, m) == -1) {
+		goto fail;
+	}
+	/* Static Virtual Channel */
+	for (i = 0; i < m->channel_count + 2; i++) {
+		if (r2v_mcs_join_channel(client_fd, p, m) == -1) {
+			goto fail;
+		}
 	}
 
 	r2v_packet_destory(p);
