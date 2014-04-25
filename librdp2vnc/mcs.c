@@ -206,11 +206,11 @@ r2v_mcs_send_conn_resp_pkt(int client_fd, packet_t *p, r2v_mcs_t *m)
 	/* Server Network Data */
 	R2V_PACKET_WRITE_UINT16_LE(u, SC_NET);
 	R2V_PACKET_WRITE_UINT16_LE(u, 8 + 2 * channel_count_even);
-	R2V_PACKET_WRITE_UINT16_LE(u, MCS_CHANNEL_ID);
+	R2V_PACKET_WRITE_UINT16_LE(u, MCS_IO_CHANNEL_ID);
 	R2V_PACKET_WRITE_UINT16_LE(u, m->channel_count);
 	for (i = 0; i < channel_count_even; i++) {
 		if (i < m->channel_count) {
-			R2V_PACKET_WRITE_UINT16_LE(u, MCS_CHANNEL_ID + i + 1);
+			R2V_PACKET_WRITE_UINT16_LE(u, MCS_IO_CHANNEL_ID + i + 1);
 		} else {
 			R2V_PACKET_WRITE_UINT16_LE(u, 0);
 		}
@@ -313,7 +313,8 @@ r2v_mcs_send_attach_user_confirm_pkt(int client_fd, packet_t *p, r2v_mcs_t *m)
 	R2V_PACKET_WRITE_UINT8(p, (MCS_ATTACH_USER_CONFIRM << 2) | 2);
 	R2V_PACKET_WRITE_UINT8(p, 0);
 	/* User Channel ID */
-	R2V_PACKET_WRITE_UINT16_BE(p, m->channel_count + 3);
+	m->user_channel_id = MCS_IO_CHANNEL_ID + m->channel_count + 1;
+	R2V_PACKET_WRITE_UINT16_BE(p, m->user_channel_id - MCS_BASE_CHANNEL_ID);
 
 	return r2v_x224_send_data_pkt(client_fd, p);
 }
@@ -321,11 +322,39 @@ r2v_mcs_send_attach_user_confirm_pkt(int client_fd, packet_t *p, r2v_mcs_t *m)
 static int
 r2v_mcs_join_channel(int client_fd, packet_t *p, r2v_mcs_t *m, uint16_t id)
 {
+	uint8_t choice;
+	uint16_t user_id, channel_id;
+
+	/* recieve channel join request */
 	if (r2v_x224_recv_data_pkt(client_fd, p) == -1) {
 		goto fail;
 	}
+	if (!R2V_PACKET_READ_REMAIN(p, 5)) {
+		goto fail;
+	}
+	R2V_PACKET_READ_UINT8(p, choice);
+	if ((choice >> 2) != MCS_CHANNEL_JOIN_REQUEST) {
+		goto fail;
+	}
+	R2V_PACKET_READ_UINT16_BE(p, user_id);
+	if (MCS_BASE_CHANNEL_ID + user_id != m->user_channel_id) {
+		goto fail;
+	}
+	R2V_PACKET_READ_UINT16_BE(p, channel_id);
+	if (channel_id != id) {
+		goto fail;
+	}
 
-	return 0;
+	/* send channel join confirm */
+	r2v_packet_reset(p);
+	R2V_PACKET_SEEK(p, TPKT_HEADER_LEN + X224_DATA_HEADER_LEN);
+	R2V_PACKET_WRITE_UINT8(p, (MCS_CHANNEL_JOIN_CONFIRM << 2) | 2);
+	R2V_PACKET_WRITE_UINT8(p, 0);
+	R2V_PACKET_WRITE_UINT16_BE(p, m->user_channel_id - MCS_BASE_CHANNEL_ID);
+	R2V_PACKET_WRITE_UINT16_BE(p, channel_id);
+	R2V_PACKET_WRITE_UINT16_BE(p, channel_id);
+
+	return r2v_x224_send_data_pkt(client_fd, p);
 
 fail:
 	return -1;
@@ -358,16 +387,17 @@ r2v_mcs_build_conn(int client_fd, r2v_mcs_t *m)
 		goto fail;
 	}
 	/* User Channel */
-	if (r2v_mcs_join_channel(client_fd, p, m) == -1) {
+	if (r2v_mcs_join_channel(client_fd, p, m, m->user_channel_id) == -1) {
 		goto fail;
 	}
 	/* MCS I/O Channel */
-	if (r2v_mcs_join_channel(client_fd, p, m) == -1) {
+	if (r2v_mcs_join_channel(client_fd, p, m, MCS_IO_CHANNEL_ID) == -1) {
 		goto fail;
 	}
 	/* Static Virtual Channel */
-	for (i = 0; i < m->channel_count + 2; i++) {
-		if (r2v_mcs_join_channel(client_fd, p, m) == -1) {
+	for (i = 0; i < m->channel_count; i++) {
+		if (r2v_mcs_join_channel(client_fd, p, m, MCS_IO_CHANNEL_ID + i + 1)
+			== -1) {
 			goto fail;
 		}
 	}

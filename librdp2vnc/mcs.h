@@ -14,6 +14,8 @@
 #define MCS_ERECT_DOMAIN_REQUEST	1
 #define MCS_ATTACH_USER_REQUEST		10
 #define MCS_ATTACH_USER_CONFIRM		11
+#define MCS_CHANNEL_JOIN_REQUEST	14
+#define MCS_CHANNEL_JOIN_CONFIRM	15
 
 #define GCCCCRQ_HEADER_LEN			23
 #define TS_UD_HEADER_LEN			4
@@ -27,7 +29,8 @@
 #define SC_NET						0x0C03
 
 #define MAX_CHANNELS_ALLOWED		31
-#define MCS_CHANNEL_ID				1003
+#define MCS_BASE_CHANNEL_ID			1001
+#define MCS_IO_CHANNEL_ID			1003
 
 typedef struct _channel_def_t {
 	char name[8];
@@ -40,6 +43,7 @@ typedef struct _r2v_mcs_t {
 	/* client network data */
 	uint32_t channel_count;
 	channel_def_t *channel_def_array;
+	uint16_t user_channel_id;
 } r2v_mcs_t;
 
 extern r2v_mcs_t *r2v_mcs_init(int client_fd);
