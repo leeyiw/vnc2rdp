@@ -1,10 +1,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "rdp_conn.h"
+#include "rdp.h"
 
 r2v_rdp_t *
-r2v_rdp_conn_init(int client_fd)
+r2v_rdp_init(int client_fd)
 {
 	r2v_rdp_t *c = NULL;
 
@@ -22,12 +22,12 @@ r2v_rdp_conn_init(int client_fd)
 	return c;
 
 fail:
-	r2v_rdp_conn_destory(c);
+	r2v_rdp_destory(c);
 	return NULL;
 }
 
 void
-r2v_rdp_conn_destory(r2v_rdp_t *c)
+r2v_rdp_destory(r2v_rdp_t *c)
 {
 	if (c == NULL) {
 		return;

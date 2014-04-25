@@ -18,15 +18,18 @@
 #define PROTOCOL_HYBRID				0x00000002
 #define PROTOCOL_HYBRID_EX			0x00000008
 
+#include "tpkt.h"
 #include "packet.h"
 
 typedef struct _r2v_x224_t {
+	r2v_tpkt_t *tpkt;
+
 	uint32_t requested_protocols;
 } r2v_x224_t;
 
 extern r2v_x224_t *r2v_x224_init(int client_fd);
 extern void r2v_x224_destory(r2v_x224_t *x);
-extern int r2v_x224_recv_data_pkt(int client_fd, packet_t *p);
-extern int r2v_x224_send_data_pkt(int client_fd, packet_t *p);
+extern int r2v_x224_recv_data_pkt(r2v_x224_t *x, packet_t *p);
+extern int r2v_x224_send_data_pkt(r2v_x224_t *x, packet_t *p);
 
 #endif

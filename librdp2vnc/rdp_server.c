@@ -56,7 +56,7 @@ fail:
 	return NULL;
 }
 
-r2v_rdp_conn_t *
+r2v_rdp_t *
 r2v_rdp_server_accept(r2v_rdp_server_t *s)
 {
 	int client_fd = 0;
@@ -64,5 +64,5 @@ r2v_rdp_server_accept(r2v_rdp_server_t *s)
 	if ((client_fd = accept(s->fd, NULL, NULL)) == -1) {
 		return NULL;
 	}
-	return r2v_rdp_conn_init(client_fd);
+	return r2v_rdp_init(client_fd);
 }

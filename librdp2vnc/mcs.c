@@ -58,13 +58,13 @@ fail:
 }
 
 static int
-r2v_mcs_recv_conn_init_pkt(int client_fd, packet_t *p, r2v_mcs_t *m)
+r2v_mcs_recv_conn_init_pkt(packet_t *p, r2v_mcs_t *m)
 {
 	uint16_t len = 0;
 	uint8_t *header = NULL;
 	uint16_t type = 0, length;
 
-	if (r2v_x224_recv_data_pkt(client_fd, p) == -1) {
+	if (r2v_x224_recv_data_pkt(m->x224, p) == -1) {
 		goto fail;
 	}
 	/* parse connect-initial header */
@@ -167,7 +167,7 @@ r2v_mcs_write_ber_encoding(packet_t *p, uint16_t identifier, uint16_t length)
 }
 
 static int
-r2v_mcs_send_conn_resp_pkt(int client_fd, packet_t *p, r2v_mcs_t *m)
+r2v_mcs_send_conn_resp_pkt(packet_t *p, r2v_mcs_t *m)
 {
 	packet_t *u = NULL;
 	uint8_t gccccrsp_header[] = {
@@ -250,7 +250,7 @@ r2v_mcs_send_conn_resp_pkt(int client_fd, packet_t *p, r2v_mcs_t *m)
 	r2v_mcs_write_ber_encoding(p, BER_TAG_OCTET_STRING, u->total_len);
 	R2V_PACKET_WRITE_N(p, u->data, u->total_len);
 
-	r2v_x224_send_data_pkt(client_fd, p);
+	r2v_x224_send_data_pkt(m->x224, p);
 
 	r2v_packet_destory(u);
 	return 0;
@@ -261,11 +261,11 @@ fail:
 }
 
 static int
-r2v_mcs_recv_erect_domain_req_pkt(int client_fd, packet_t *p, r2v_mcs_t *m)
+r2v_mcs_recv_erect_domain_req_pkt(packet_t *p, r2v_mcs_t *m)
 {
 	uint8_t choice;
 
-	if (r2v_x224_recv_data_pkt(client_fd, p) == -1) {
+	if (r2v_x224_recv_data_pkt(m->x224, p) == -1) {
 		goto fail;
 	}
 	if (!R2V_PACKET_READ_REMAIN(p, sizeof(uint8_t))) {
@@ -283,11 +283,11 @@ fail:
 }
 
 static int
-r2v_mcs_recv_attach_user_request_pkt(int client_fd, packet_t *p, r2v_mcs_t *m)
+r2v_mcs_recv_attach_user_request_pkt(packet_t *p, r2v_mcs_t *m)
 {
 	uint8_t choice;
 
-	if (r2v_x224_recv_data_pkt(client_fd, p) == -1) {
+	if (r2v_x224_recv_data_pkt(m->x224, p) == -1) {
 		goto fail;
 	}
 	if (!R2V_PACKET_READ_REMAIN(p, sizeof(uint8_t))) {
@@ -305,7 +305,7 @@ fail:
 }
 
 static int
-r2v_mcs_send_attach_user_confirm_pkt(int client_fd, packet_t *p, r2v_mcs_t *m)
+r2v_mcs_send_attach_user_confirm_pkt(packet_t *p, r2v_mcs_t *m)
 {
 	r2v_packet_reset(p);
 	R2V_PACKET_SEEK(p, TPKT_HEADER_LEN + X224_DATA_HEADER_LEN);
@@ -316,17 +316,17 @@ r2v_mcs_send_attach_user_confirm_pkt(int client_fd, packet_t *p, r2v_mcs_t *m)
 	m->user_channel_id = MCS_IO_CHANNEL_ID + m->channel_count + 1;
 	R2V_PACKET_WRITE_UINT16_BE(p, m->user_channel_id - MCS_BASE_CHANNEL_ID);
 
-	return r2v_x224_send_data_pkt(client_fd, p);
+	return r2v_x224_send_data_pkt(m->x224, p);
 }
 
 static int
-r2v_mcs_join_channel(int client_fd, packet_t *p, r2v_mcs_t *m, uint16_t id)
+r2v_mcs_join_channel(packet_t *p, r2v_mcs_t *m, uint16_t id)
 {
 	uint8_t choice;
 	uint16_t user_id, channel_id;
 
 	/* recieve channel join request */
-	if (r2v_x224_recv_data_pkt(client_fd, p) == -1) {
+	if (r2v_x224_recv_data_pkt(m->x224, p) == -1) {
 		goto fail;
 	}
 	if (!R2V_PACKET_READ_REMAIN(p, 5)) {
@@ -354,14 +354,14 @@ r2v_mcs_join_channel(int client_fd, packet_t *p, r2v_mcs_t *m, uint16_t id)
 	R2V_PACKET_WRITE_UINT16_BE(p, channel_id);
 	R2V_PACKET_WRITE_UINT16_BE(p, channel_id);
 
-	return r2v_x224_send_data_pkt(client_fd, p);
+	return r2v_x224_send_data_pkt(m->x224, p);
 
 fail:
 	return -1;
 }
 
 static int
-r2v_mcs_build_conn(int client_fd, r2v_mcs_t *m)
+r2v_mcs_build_conn(r2v_mcs_t *m)
 {
 	uint16_t i = 0;
 	packet_t *p = NULL;
@@ -371,32 +371,32 @@ r2v_mcs_build_conn(int client_fd, r2v_mcs_t *m)
 		goto fail;
 	}
 
-	if (r2v_mcs_recv_conn_init_pkt(client_fd, p, m) == -1) {
+	if (r2v_mcs_recv_conn_init_pkt(p, m) == -1) {
 		goto fail;
 	}
-	if (r2v_mcs_send_conn_resp_pkt(client_fd, p, m) == -1) {
+	if (r2v_mcs_send_conn_resp_pkt(p, m) == -1) {
 		goto fail;
 	}
-	if (r2v_mcs_recv_erect_domain_req_pkt(client_fd, p, m) == -1) {
+	if (r2v_mcs_recv_erect_domain_req_pkt(p, m) == -1) {
 		goto fail;
 	}
-	if (r2v_mcs_recv_attach_user_request_pkt(client_fd, p, m) == -1) {
+	if (r2v_mcs_recv_attach_user_request_pkt(p, m) == -1) {
 		goto fail;
 	}
-	if (r2v_mcs_send_attach_user_confirm_pkt(client_fd, p, m) == -1) {
+	if (r2v_mcs_send_attach_user_confirm_pkt(p, m) == -1) {
 		goto fail;
 	}
 	/* User Channel */
-	if (r2v_mcs_join_channel(client_fd, p, m, m->user_channel_id) == -1) {
+	if (r2v_mcs_join_channel(p, m, m->user_channel_id) == -1) {
 		goto fail;
 	}
 	/* MCS I/O Channel */
-	if (r2v_mcs_join_channel(client_fd, p, m, MCS_IO_CHANNEL_ID) == -1) {
+	if (r2v_mcs_join_channel(p, m, MCS_IO_CHANNEL_ID) == -1) {
 		goto fail;
 	}
 	/* Static Virtual Channel */
 	for (i = 0; i < m->channel_count; i++) {
-		if (r2v_mcs_join_channel(client_fd, p, m, MCS_IO_CHANNEL_ID + i + 1)
+		if (r2v_mcs_join_channel(p, m, MCS_IO_CHANNEL_ID + i + 1)
 			== -1) {
 			goto fail;
 		}
@@ -426,7 +426,7 @@ r2v_mcs_init(int client_fd)
 		goto fail;
 	}
 
-	if (r2v_mcs_build_conn(client_fd, m) == -1) {
+	if (r2v_mcs_build_conn(m) == -1) {
 		goto fail;
 	}
 
