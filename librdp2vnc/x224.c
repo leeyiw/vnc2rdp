@@ -7,7 +7,7 @@
 static int
 r2v_x224_build_conn(r2v_x224_t *x)
 {
-	packet_t *p = NULL;
+	r2v_packet_t *p = NULL;
 	uint8_t li = 0, tpdu_code = 0;
 	uint8_t terminated = 0, type = 0, flags = 0;
 	uint16_t length = 0;
@@ -75,7 +75,7 @@ r2v_x224_build_conn(r2v_x224_t *x)
 	}
 
 	/* build Server X.224 Connection Confirm PDU */
-	r2v_packet_reset(p);
+	r2v_tpkt_init_packet(p);
 	R2V_PACKET_SEEK(p, TPKT_HEADER_LEN);
 	/* Length indicator field is set fixed to 14 */
 	R2V_PACKET_WRITE_UINT8(p, 14);
@@ -135,7 +135,7 @@ r2v_x224_destory(r2v_x224_t *x)
 }
 
 int
-r2v_x224_recv(r2v_x224_t *x, packet_t *p)
+r2v_x224_recv(r2v_x224_t *x, r2v_packet_t *p)
 {
 	uint8_t li = 0, tpdu_code = 0;
 
@@ -157,7 +157,7 @@ fail:
 }
 
 int
-r2v_x224_send(r2v_x224_t *x, packet_t *p)
+r2v_x224_send(r2v_x224_t *x, r2v_packet_t *p)
 {
 	uint8_t *current = NULL;
 
@@ -172,4 +172,12 @@ r2v_x224_send(r2v_x224_t *x, packet_t *p)
 	p->current = current;
 
 	return r2v_tpkt_send(x->tpkt, p);
+}
+
+void
+r2v_x224_init_packet(r2v_packet_t *p)
+{
+	r2v_tpkt_init_packet(p);
+	p->x224 = p->current;
+	R2V_PACKET_SEEK(p, X224_DATA_HEADER_LEN);
 }

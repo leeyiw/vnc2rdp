@@ -3,16 +3,16 @@
 
 #include "packet.h"
 
-packet_t *
+r2v_packet_t *
 r2v_packet_init(int max_len)
 {
-	packet_t *p = NULL;
+	r2v_packet_t *p = NULL;
 
-	p = (packet_t *)malloc(sizeof(packet_t));
+	p = (r2v_packet_t *)malloc(sizeof(r2v_packet_t));
 	if (p == NULL) {
 		return NULL;
 	}
-	memset(p, 0, sizeof(packet_t));
+	memset(p, 0, sizeof(r2v_packet_t));
 
 	p->data = (uint8_t *)malloc(max_len);
 	if (p->data == NULL) {
@@ -29,18 +29,22 @@ fail:
 }
 
 void
-r2v_packet_reset(packet_t *p)
+r2v_packet_reset(r2v_packet_t *p)
 {
 	if (p == NULL) {
 		return;
 	}
-	p->total_len = 0;
 	memset(p->data, 0, p->max_len);
 	p->current = p->data;
+	p->end = p->data;
+	p->tpkt = NULL;
+	p->x224 = NULL;
+	p->mcs = NULL;
+	p->sec = NULL;
 }
 
 void
-r2v_packet_destory(packet_t *p)
+r2v_packet_destory(r2v_packet_t *p)
 {
 	if (p == NULL) {
 		return;
@@ -49,10 +53,4 @@ r2v_packet_destory(packet_t *p)
 		free(p->data);
 	}
 	free(p);
-}
-
-void
-r2v_packet_end(packet_t *p)
-{
-	p->total_len = p->current - p->data;
 }

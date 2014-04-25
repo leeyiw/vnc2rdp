@@ -49,12 +49,12 @@ r2v_sec_destory(r2v_sec_t *s)
 }
 
 int
-r2v_sec_recv(r2v_sec_t *s, packet_t *p, uint16_t *sec_flags)
+r2v_sec_recv(r2v_sec_t *s, r2v_packet_t *p, uint16_t *sec_flags,
+			 uint16_t *channel_id)
 {
 	uint8_t choice = 0;
-	uint16_t channel_id;
 
-	if (r2v_mcs_recv(s->mcs, p, &choice, &channel_id) == -1) {
+	if (r2v_mcs_recv(s->mcs, p, &choice, channel_id) == -1) {
 		goto fail;
 	}
 	/* check if is send data request */
@@ -70,4 +70,22 @@ r2v_sec_recv(r2v_sec_t *s, packet_t *p, uint16_t *sec_flags)
 
 fail:
 	return -1;
+}
+
+int
+r2v_sec_send(r2v_sec_t *s, r2v_packet_t *p, uint16_t sec_flags,
+			 uint16_t channel_id)
+{
+	p->current = p->sec;
+	R2V_PACKET_WRITE_UINT16_LE(p, sec_flags);
+	R2V_PACKET_WRITE_UINT16_LE(p, 0);
+	return r2v_mcs_send(s->mcs, p, MCS_SEND_DATA_INDICATION, channel_id);
+}
+
+void
+r2v_sec_init_packet(r2v_packet_t *p)
+{
+	r2v_mcs_init_packet(p);
+	p->sec = p->current;
+	R2V_PACKET_SEEK(p, 4);
 }

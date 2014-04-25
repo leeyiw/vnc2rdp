@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #define R2V_PACKET_READ_REMAIN(p, n) \
-	((p)->current + n <= (p)->data + (p)->total_len)
+	((p)->current + n <= (p)->end)
 
 #define R2V_PACKET_READ_UINT8(p, v) \
 	do { \
@@ -70,16 +70,22 @@
 #define R2V_PACKET_SEEK(p, n)			(p)->current += (n)
 #define R2V_PACKET_SEEK_UINT8(p)		R2V_PACKET_SEEK(p, sizeof(uint8_t))
 
-typedef struct _packet_t {
+#define R2V_PACKET_END(p)				(p)->end = (p)->current
+#define R2V_PACKET_LEN(p)				((p)->end - (p)->data)
+
+typedef struct _r2v_packet_t {
 	uint16_t max_len;
-	uint16_t total_len;
 	uint8_t *data;
 	uint8_t *current;
-} packet_t;
+	uint8_t *end;
+	uint8_t *tpkt;
+	uint8_t *x224;
+	uint8_t *mcs;
+	uint8_t *sec;
+} r2v_packet_t;
 
-extern packet_t *r2v_packet_init(int max_len);
-extern void r2v_packet_reset(packet_t *p);
-extern void r2v_packet_destory(packet_t *p);
-extern void r2v_packet_end(packet_t *p);
+extern r2v_packet_t *r2v_packet_init(int max_len);
+extern void r2v_packet_reset(r2v_packet_t *p);
+extern void r2v_packet_destory(r2v_packet_t *p);
 
 #endif

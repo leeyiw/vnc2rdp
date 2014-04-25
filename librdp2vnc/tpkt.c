@@ -40,10 +40,11 @@ r2v_tpkt_destory(r2v_tpkt_t *t)
 }
 
 int
-r2v_tpkt_recv(r2v_tpkt_t *t, packet_t *p)
+r2v_tpkt_recv(r2v_tpkt_t *t, r2v_packet_t *p)
 {
 	int n = 0;
 	uint8_t tpkt_version = 0;
+	uint16_t tpkt_len = 0;
 
 	r2v_packet_reset(p);
 
@@ -58,9 +59,9 @@ r2v_tpkt_recv(r2v_tpkt_t *t, packet_t *p)
 		goto fail;
 	}
 	R2V_PACKET_SEEK_UINT8(p);
-	R2V_PACKET_READ_UINT16_BE(p, p->total_len);
+	R2V_PACKET_READ_UINT16_BE(p, tpkt_len);
 
-	n = recv(t->fd, p->current, p->total_len - TPKT_HEADER_LEN,
+	n = recv(t->fd, p->current, tpkt_len - TPKT_HEADER_LEN,
 			 MSG_WAITALL);
 	if (n == -1 || n == 0) {
 		goto fail;
@@ -73,16 +74,14 @@ fail:
 }
 
 int
-r2v_tpkt_send(r2v_tpkt_t *t, packet_t *p)
+r2v_tpkt_send(r2v_tpkt_t *t, r2v_packet_t *p)
 {
-	p->total_len = p->current - p->data;
-
-	p->current = p->data;
+	p->current = p->tpkt;
 	R2V_PACKET_WRITE_UINT8(p, TPKT_VERSION);
 	R2V_PACKET_WRITE_UINT8(p, 0);
-	R2V_PACKET_WRITE_UINT16_BE(p, p->total_len);
+	R2V_PACKET_WRITE_UINT16_BE(p, R2V_PACKET_LEN(p));
 
-	if (-1 == send(t->fd, p->data, p->total_len, 0)) {
+	if (-1 == send(t->fd, p->data, R2V_PACKET_LEN(p), 0)) {
 		goto fail;
 	}
 
@@ -90,4 +89,12 @@ r2v_tpkt_send(r2v_tpkt_t *t, packet_t *p)
 
 fail:
 	return -1;
+}
+
+void
+r2v_tpkt_init_packet(r2v_packet_t *p)
+{
+	r2v_packet_reset(p);
+	p->tpkt = p->current;
+	R2V_PACKET_SEEK(p, TPKT_HEADER_LEN);
 }

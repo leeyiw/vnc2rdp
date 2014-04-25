@@ -50,7 +50,10 @@ typedef struct _r2v_mcs_t {
 
 extern r2v_mcs_t *r2v_mcs_init(int client_fd);
 extern void r2v_mcs_destory(r2v_mcs_t *m);
-extern int r2v_mcs_recv(r2v_mcs_t *m, packet_t *p, uint8_t *choice,
+extern int r2v_mcs_recv(r2v_mcs_t *m, r2v_packet_t *p, uint8_t *choice,
 						uint16_t *channel_id);
+extern int r2v_mcs_send(r2v_mcs_t *m, r2v_packet_t *p, uint8_t choice,
+						uint16_t channel_id);
+extern void r2v_mcs_init_packet(r2v_packet_t *p);
 
 #endif

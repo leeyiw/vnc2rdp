@@ -6,7 +6,7 @@
 #include "sec.h"
 
 static int
-r2v_mcs_parse_ber_encoding(packet_t *p, uint16_t identifier, uint16_t *length)
+r2v_mcs_parse_ber_encoding(r2v_packet_t *p, uint16_t identifier, uint16_t *length)
 {
 	/* BER-encoding see http://en.wikipedia.org/wiki/X.690 */
 	uint16_t id, len, i, l;
@@ -34,7 +34,7 @@ r2v_mcs_parse_ber_encoding(packet_t *p, uint16_t identifier, uint16_t *length)
 }
 
 static int
-r2v_mcs_parse_client_network_data(packet_t *p, r2v_mcs_t *m)
+r2v_mcs_parse_client_network_data(r2v_packet_t *p, r2v_mcs_t *m)
 {
 	uint16_t channel_def_array_size = 0;
 
@@ -58,7 +58,7 @@ fail:
 }
 
 static int
-r2v_mcs_recv_conn_init(packet_t *p, r2v_mcs_t *m)
+r2v_mcs_recv_conn_init(r2v_packet_t *p, r2v_mcs_t *m)
 {
 	uint16_t len = 0;
 	uint8_t *header = NULL;
@@ -147,7 +147,7 @@ fail:
 }
 
 static int
-r2v_mcs_write_ber_encoding(packet_t *p, uint16_t identifier, uint16_t length)
+r2v_mcs_write_ber_encoding(r2v_packet_t *p, uint16_t identifier, uint16_t length)
 {
 	/* BER-encoding see http://en.wikipedia.org/wiki/X.690 */
 	if (identifier > 0xFF) {
@@ -165,9 +165,9 @@ r2v_mcs_write_ber_encoding(packet_t *p, uint16_t identifier, uint16_t length)
 }
 
 static int
-r2v_mcs_send_conn_resp(packet_t *p, r2v_mcs_t *m)
+r2v_mcs_send_conn_resp(r2v_packet_t *p, r2v_mcs_t *m)
 {
-	packet_t *u = NULL;
+	r2v_packet_t *u = NULL;
 	uint8_t gccccrsp_header[] = {
 		0x00, 0x05, 0x00, 0x14, 0x7c, 0x00, 0x01, 0x2a, 0x14, 0x76,
 		0x0a, 0x01, 0x01, 0x00, 0x01, 0xc0, 0x00, 0x4d, 0x63, 0x44,
@@ -215,12 +215,12 @@ r2v_mcs_send_conn_resp(packet_t *p, r2v_mcs_t *m)
 	}
 
 	/* finish construct user data */
-	r2v_packet_end(u);
+	R2V_PACKET_END(u);
 
 	/* start construct entire packet */
 	r2v_packet_reset(p);
 	R2V_PACKET_SEEK(p, TPKT_HEADER_LEN + X224_DATA_HEADER_LEN);
-	mcs_rsp_len = u->total_len + (u->total_len > 0x80 ? 38 : 36);
+	mcs_rsp_len = R2V_PACKET_LEN(u) + (R2V_PACKET_LEN(u) > 0x80 ? 38 : 36);
 	r2v_mcs_write_ber_encoding(p, BER_TAG_CONNECT_RESPONSE, mcs_rsp_len);
 	r2v_mcs_write_ber_encoding(p, BER_TAG_ENUMERATED, 1);
 	R2V_PACKET_WRITE_UINT8(p, 0);
@@ -245,8 +245,8 @@ r2v_mcs_send_conn_resp(packet_t *p, r2v_mcs_t *m)
 	R2V_PACKET_WRITE_UINT8(p, 0xF8);
 	r2v_mcs_write_ber_encoding(p, BER_TAG_INTEGER, 1);
 	R2V_PACKET_WRITE_UINT8(p, 2);
-	r2v_mcs_write_ber_encoding(p, BER_TAG_OCTET_STRING, u->total_len);
-	R2V_PACKET_WRITE_N(p, u->data, u->total_len);
+	r2v_mcs_write_ber_encoding(p, BER_TAG_OCTET_STRING, R2V_PACKET_LEN(u));
+	R2V_PACKET_WRITE_N(p, u->data, R2V_PACKET_LEN(u));
 
 	r2v_x224_send(m->x224, p);
 
@@ -259,7 +259,7 @@ fail:
 }
 
 static int
-r2v_mcs_recv_erect_domain_req(packet_t *p, r2v_mcs_t *m)
+r2v_mcs_recv_erect_domain_req(r2v_packet_t *p, r2v_mcs_t *m)
 {
 	uint8_t choice;
 
@@ -281,7 +281,7 @@ fail:
 }
 
 static int
-r2v_mcs_recv_attach_user_request(packet_t *p, r2v_mcs_t *m)
+r2v_mcs_recv_attach_user_request(r2v_packet_t *p, r2v_mcs_t *m)
 {
 	uint8_t choice;
 
@@ -303,7 +303,7 @@ fail:
 }
 
 static int
-r2v_mcs_send_attach_user_confirm(packet_t *p, r2v_mcs_t *m)
+r2v_mcs_send_attach_user_confirm(r2v_packet_t *p, r2v_mcs_t *m)
 {
 	r2v_packet_reset(p);
 	R2V_PACKET_SEEK(p, TPKT_HEADER_LEN + X224_DATA_HEADER_LEN);
@@ -318,7 +318,7 @@ r2v_mcs_send_attach_user_confirm(packet_t *p, r2v_mcs_t *m)
 }
 
 static int
-r2v_mcs_join_channel(packet_t *p, r2v_mcs_t *m, uint16_t id)
+r2v_mcs_join_channel(r2v_packet_t *p, r2v_mcs_t *m, uint16_t id)
 {
 	uint8_t choice;
 	uint16_t user_id, channel_id;
@@ -362,7 +362,7 @@ static int
 r2v_mcs_build_conn(r2v_mcs_t *m)
 {
 	uint16_t i = 0;
-	packet_t *p = NULL;
+	r2v_packet_t *p = NULL;
 
 	p = r2v_packet_init(8192);
 	if (p == NULL) {
@@ -451,7 +451,7 @@ r2v_mcs_destory(r2v_mcs_t *m)
 }
 
 int
-r2v_mcs_recv(r2v_mcs_t *m , packet_t *p, uint8_t *choice,
+r2v_mcs_recv(r2v_mcs_t *m , r2v_packet_t *p, uint8_t *choice,
 			 uint16_t *channel_id)
 {
 	uint16_t user_id;
@@ -481,4 +481,25 @@ r2v_mcs_recv(r2v_mcs_t *m , packet_t *p, uint8_t *choice,
 
 fail:
 	return -1;
+}
+
+int
+r2v_mcs_send(r2v_mcs_t *m, r2v_packet_t *p, uint8_t choice,
+			 uint16_t channel_id)
+{
+	p->current = p->mcs;
+	R2V_PACKET_WRITE_UINT8(p, choice << 2);
+	R2V_PACKET_WRITE_UINT16_BE(p, m->user_channel_id - MCS_BASE_CHANNEL_ID);
+	R2V_PACKET_WRITE_UINT16_BE(p, channel_id);
+	R2V_PACKET_WRITE_UINT8(p, 0x70);
+	R2V_PACKET_WRITE_UINT16_BE(p, 0x8000 | (p->end - p->mcs - 8));
+	return r2v_x224_send(m->x224, p);
+}
+
+void
+r2v_mcs_init_packet(r2v_packet_t *p)
+{
+	r2v_x224_init_packet(p);
+	p->mcs = p->current;
+	R2V_PACKET_SEEK(p, 8);
 }
