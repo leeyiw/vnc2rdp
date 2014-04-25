@@ -40,7 +40,7 @@ r2v_tpkt_destory(r2v_tpkt_t *t)
 }
 
 int
-r2v_tpkt_recv_pkt(r2v_tpkt_t *t, packet_t *p)
+r2v_tpkt_recv(r2v_tpkt_t *t, packet_t *p)
 {
 	int n = 0;
 	uint8_t tpkt_version = 0;
@@ -73,7 +73,7 @@ fail:
 }
 
 int
-r2v_tpkt_send_pkt(r2v_tpkt_t *t, packet_t *p)
+r2v_tpkt_send(r2v_tpkt_t *t, packet_t *p)
 {
 	p->total_len = p->current - p->data;
 

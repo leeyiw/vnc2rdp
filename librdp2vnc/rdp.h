@@ -8,6 +8,6 @@ typedef struct _r2v_rdp_t {
 } r2v_rdp_t;
 
 extern r2v_rdp_t *r2v_rdp_init(int client_fd);
-extern void r2v_rdp_destory(r2v_rdp_t *c);
+extern void r2v_rdp_destory(r2v_rdp_t *r);
 
 #endif

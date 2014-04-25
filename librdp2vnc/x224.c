@@ -18,7 +18,7 @@ r2v_x224_build_conn(r2v_x224_t *x)
 	}
 
 	/* receive Client X.224 Connection Request PDU */
-	if (r2v_tpkt_recv_pkt(x->tpkt, p) == -1) {
+	if (r2v_tpkt_recv(x->tpkt, p) == -1) {
 		goto fail;
 	}
 	/* parse X.224 Class 0 Connection Request header */
@@ -89,7 +89,7 @@ r2v_x224_build_conn(r2v_x224_t *x)
 	R2V_PACKET_WRITE_UINT16_LE(p, 0x0008);
 	R2V_PACKET_WRITE_UINT32_LE(p, PROTOCOL_RDP);
 	/* send Server X.224 Connection Confirm PDU */
-	r2v_tpkt_send_pkt(x->tpkt, p);
+	r2v_tpkt_send(x->tpkt, p);
 
 	return 0;
 
@@ -135,11 +135,11 @@ r2v_x224_destory(r2v_x224_t *x)
 }
 
 int
-r2v_x224_recv_data_pkt(r2v_x224_t *x, packet_t *p)
+r2v_x224_recv(r2v_x224_t *x, packet_t *p)
 {
 	uint8_t li = 0, tpdu_code = 0;
 
-	if (r2v_tpkt_recv_pkt(x->tpkt, p) == -1) {
+	if (r2v_tpkt_recv(x->tpkt, p) == -1) {
 		goto fail;
 	}
 	/* parse X.224 data pdu header */
@@ -157,7 +157,7 @@ fail:
 }
 
 int
-r2v_x224_send_data_pkt(r2v_x224_t *x, packet_t *p)
+r2v_x224_send(r2v_x224_t *x, packet_t *p)
 {
 	uint8_t *current = NULL;
 
@@ -171,5 +171,5 @@ r2v_x224_send_data_pkt(r2v_x224_t *x, packet_t *p)
 	/* restore current pointer */
 	p->current = current;
 
-	return r2v_tpkt_send_pkt(x->tpkt, p);
+	return r2v_tpkt_send(x->tpkt, p);
 }

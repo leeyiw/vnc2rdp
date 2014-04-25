@@ -29,7 +29,7 @@ typedef struct _r2v_x224_t {
 
 extern r2v_x224_t *r2v_x224_init(int client_fd);
 extern void r2v_x224_destory(r2v_x224_t *x);
-extern int r2v_x224_recv_data_pkt(r2v_x224_t *x, packet_t *p);
-extern int r2v_x224_send_data_pkt(r2v_x224_t *x, packet_t *p);
+extern int r2v_x224_recv(r2v_x224_t *x, packet_t *p);
+extern int r2v_x224_send(r2v_x224_t *x, packet_t *p);
 
 #endif

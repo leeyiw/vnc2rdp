@@ -47,3 +47,27 @@ r2v_sec_destory(r2v_sec_t *s)
 	}
 	free(s);
 }
+
+int
+r2v_sec_recv(r2v_sec_t *s, packet_t *p, uint16_t *sec_flags)
+{
+	uint8_t choice = 0;
+	uint16_t channel_id;
+
+	if (r2v_mcs_recv(s->mcs, p, &choice, &channel_id) == -1) {
+		goto fail;
+	}
+	/* check if is send data request */
+	if (choice != MCS_SEND_DATA_REQUEST) {
+		goto fail;
+	}
+	/* parse security header */
+	R2V_PACKET_READ_UINT16_LE(p, *sec_flags);
+	/* skip flagsHi */
+	R2V_PACKET_SEEK(p, 2);
+
+	return 0;
+
+fail:
+	return -1;
+}
