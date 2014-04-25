@@ -3,7 +3,7 @@ CC = gcc
 CFLAGS = -c -Wall -fPIC
 DEBUG_FLAGS = -g
 RELEASE_FLAGS = -O2
-OBJS = rdp_server.o rdp_conn.o sec.o mcs.o x224.o tpkt.o packet.o
+OBJS = rdp_server.o rdp.o sec.o mcs.o x224.o tpkt.o packet.o
 LDFLAGS = -shared
 
 .PHONY: debug release all clean
@@ -21,8 +21,8 @@ $(TARGET): $(OBJS)
 	$(CC) $(LDFLAGS) -o $(TARGET) $(OBJS)
 rdp_server.o: rdp_server.c rdp_server.h
 	$(CC) $(CFLAGS) $(INCLUDE) rdp_server.c
-rdp_conn.o: rdp_conn.c rdp_conn.h
-	$(CC) $(CFLAGS) $(INCLUDE) rdp_conn.c
+rdp.o: rdp.c rdp.h
+	$(CC) $(CFLAGS) $(INCLUDE) rdp.c
 sec.o: sec.c sec.h
 	$(CC) $(CFLAGS) $(INCLUDE) sec.c
 mcs.o: mcs.c mcs.h

@@ -426,7 +426,7 @@ r2v_mcs_init(int client_fd)
 		goto fail;
 	}
 
-	if (-1 == r2v_mcs_build_conn(client_fd, m)) {
+	if (r2v_mcs_build_conn(client_fd, m) == -1) {
 		goto fail;
 	}
 

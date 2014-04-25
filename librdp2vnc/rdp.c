@@ -3,16 +3,16 @@
 
 #include "rdp_conn.h"
 
-r2v_rdp_conn_t *
+r2v_rdp_t *
 r2v_rdp_conn_init(int client_fd)
 {
-	r2v_rdp_conn_t *c = NULL;
+	r2v_rdp_t *c = NULL;
 
-	c = (r2v_rdp_conn_t *)malloc(sizeof(r2v_rdp_conn_t));
+	c = (r2v_rdp_t *)malloc(sizeof(r2v_rdp_t));
 	if (c == NULL) {
 		goto fail;
 	}
-	memset(c, 0, sizeof(r2v_rdp_conn_t));
+	memset(c, 0, sizeof(r2v_rdp_t));
 
 	c->sec = r2v_sec_init(client_fd);
 	if (c->sec == NULL) {
@@ -27,7 +27,7 @@ fail:
 }
 
 void
-r2v_rdp_conn_destory(r2v_rdp_conn_t *c)
+r2v_rdp_conn_destory(r2v_rdp_t *c)
 {
 	if (c == NULL) {
 		return;
