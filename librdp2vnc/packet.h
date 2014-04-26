@@ -82,6 +82,7 @@ typedef struct _r2v_packet_t {
 	uint8_t *x224;
 	uint8_t *mcs;
 	uint8_t *sec;
+	uint8_t *rdp;
 } r2v_packet_t;
 
 extern r2v_packet_t *r2v_packet_init(int max_len);
