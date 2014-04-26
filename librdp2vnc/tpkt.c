@@ -52,6 +52,7 @@ r2v_tpkt_recv(r2v_tpkt_t *t, r2v_packet_t *p)
 	if (n == -1 || n == 0) {
 		goto fail;
 	}
+	p->end += n;
 
 	/* TPKT version must be 3 */
 	R2V_PACKET_READ_UINT8(p, tpkt_version);
@@ -66,6 +67,7 @@ r2v_tpkt_recv(r2v_tpkt_t *t, r2v_packet_t *p)
 	if (n == -1 || n == 0) {
 		goto fail;
 	}
+	p->end += n;
 
 	return 0;
 

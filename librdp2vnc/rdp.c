@@ -25,7 +25,6 @@ fail:
 static int
 r2v_rdp_send_license_error(r2v_rdp_t *r, r2v_packet_t *p)
 {
-	r2v_packet_reset(p);
 	r2v_sec_init_packet(p);
 
 	/* bMsgType */
@@ -44,7 +43,6 @@ r2v_rdp_send_license_error(r2v_rdp_t *r, r2v_packet_t *p)
 	R2V_PACKET_WRITE_UINT16_LE(p, 0);
 
 	R2V_PACKET_END(p);
-
 	r2v_sec_send(r->sec, p, SEC_LICENSE_PKT, MCS_IO_CHANNEL_ID);
 
 	return 0;

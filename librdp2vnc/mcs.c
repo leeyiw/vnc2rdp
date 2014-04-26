@@ -218,8 +218,7 @@ r2v_mcs_send_conn_resp(r2v_packet_t *p, r2v_mcs_t *m)
 	R2V_PACKET_END(u);
 
 	/* start construct entire packet */
-	r2v_packet_reset(p);
-	R2V_PACKET_SEEK(p, TPKT_HEADER_LEN + X224_DATA_HEADER_LEN);
+	r2v_x224_init_packet(p);
 	mcs_rsp_len = R2V_PACKET_LEN(u) + (R2V_PACKET_LEN(u) > 0x80 ? 38 : 36);
 	r2v_mcs_write_ber_encoding(p, BER_TAG_CONNECT_RESPONSE, mcs_rsp_len);
 	r2v_mcs_write_ber_encoding(p, BER_TAG_ENUMERATED, 1);
@@ -248,6 +247,7 @@ r2v_mcs_send_conn_resp(r2v_packet_t *p, r2v_mcs_t *m)
 	r2v_mcs_write_ber_encoding(p, BER_TAG_OCTET_STRING, R2V_PACKET_LEN(u));
 	R2V_PACKET_WRITE_N(p, u->data, R2V_PACKET_LEN(u));
 
+	R2V_PACKET_END(p);
 	r2v_x224_send(m->x224, p);
 
 	r2v_packet_destory(u);
@@ -305,8 +305,7 @@ fail:
 static int
 r2v_mcs_send_attach_user_confirm(r2v_packet_t *p, r2v_mcs_t *m)
 {
-	r2v_packet_reset(p);
-	R2V_PACKET_SEEK(p, TPKT_HEADER_LEN + X224_DATA_HEADER_LEN);
+	r2v_x224_init_packet(p);
 
 	R2V_PACKET_WRITE_UINT8(p, (MCS_ATTACH_USER_CONFIRM << 2) | 2);
 	R2V_PACKET_WRITE_UINT8(p, 0);
@@ -314,6 +313,7 @@ r2v_mcs_send_attach_user_confirm(r2v_packet_t *p, r2v_mcs_t *m)
 	m->user_channel_id = MCS_IO_CHANNEL_ID + m->channel_count + 1;
 	R2V_PACKET_WRITE_UINT16_BE(p, m->user_channel_id - MCS_BASE_CHANNEL_ID);
 
+	R2V_PACKET_END(p);
 	return r2v_x224_send(m->x224, p);
 }
 
@@ -344,14 +344,14 @@ r2v_mcs_join_channel(r2v_packet_t *p, r2v_mcs_t *m, uint16_t id)
 	}
 
 	/* send channel join confirm */
-	r2v_packet_reset(p);
-	R2V_PACKET_SEEK(p, TPKT_HEADER_LEN + X224_DATA_HEADER_LEN);
+	r2v_x224_init_packet(p);
 	R2V_PACKET_WRITE_UINT8(p, (MCS_CHANNEL_JOIN_CONFIRM << 2) | 2);
 	R2V_PACKET_WRITE_UINT8(p, 0);
 	R2V_PACKET_WRITE_UINT16_BE(p, m->user_channel_id - MCS_BASE_CHANNEL_ID);
 	R2V_PACKET_WRITE_UINT16_BE(p, channel_id);
 	R2V_PACKET_WRITE_UINT16_BE(p, channel_id);
 
+	R2V_PACKET_END(p);
 	return r2v_x224_send(m->x224, p);
 
 fail:

@@ -76,7 +76,6 @@ r2v_x224_build_conn(r2v_x224_t *x)
 
 	/* build Server X.224 Connection Confirm PDU */
 	r2v_tpkt_init_packet(p);
-	R2V_PACKET_SEEK(p, TPKT_HEADER_LEN);
 	/* Length indicator field is set fixed to 14 */
 	R2V_PACKET_WRITE_UINT8(p, 14);
 	R2V_PACKET_WRITE_UINT8(p, TPDU_CODE_CC);
@@ -89,6 +88,7 @@ r2v_x224_build_conn(r2v_x224_t *x)
 	R2V_PACKET_WRITE_UINT16_LE(p, 0x0008);
 	R2V_PACKET_WRITE_UINT32_LE(p, PROTOCOL_RDP);
 	/* send Server X.224 Connection Confirm PDU */
+	R2V_PACKET_END(p);
 	r2v_tpkt_send(x->tpkt, p);
 
 	return 0;
@@ -159,17 +159,10 @@ fail:
 int
 r2v_x224_send(r2v_x224_t *x, r2v_packet_t *p)
 {
-	uint8_t *current = NULL;
-
-	/* save current pointer */
-	current = p->current;
-	/* fill X.224 data pdu header */
-	p->current = p->data + TPKT_HEADER_LEN;
+	p->current = p->x224;
 	R2V_PACKET_WRITE_UINT8(p, 2);
 	R2V_PACKET_WRITE_UINT8(p, TPDU_CODE_DT);
 	R2V_PACKET_WRITE_UINT8(p, 0x80);
-	/* restore current pointer */
-	p->current = current;
 
 	return r2v_tpkt_send(x->tpkt, p);
 }
