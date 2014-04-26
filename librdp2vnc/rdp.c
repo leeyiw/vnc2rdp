@@ -78,6 +78,24 @@ r2v_rdp_send_demand_active(r2v_rdp_t *r, r2v_packet_t *p)
 }
 
 static int
+r2v_rdp_recv_confirm_active(r2v_rdp_t *r, r2v_packet_t *p)
+{
+	uint8_t type;
+
+	if (r2v_rdp_recv_control_packet(r, p, &type) == -1) {
+		goto fail;
+	}
+	if (type != PDUTYPE_CONFIRMACTIVEPDU) {
+		goto fail;
+	}
+
+	return 0;
+
+fail:
+	return -1;
+}
+
+static int
 r2v_rdp_build_conn(r2v_rdp_t *r)
 {
 	r2v_packet_t *p = NULL;
@@ -94,6 +112,9 @@ r2v_rdp_build_conn(r2v_rdp_t *r)
 		goto fail;
 	}
 	if (r2v_rdp_send_demand_active(r, p) == -1) {
+		goto fail;
+	}
+	if (r2v_rdp_recv_confirm_active(r, p) == -1) {
 		goto fail;
 	}
 
@@ -150,6 +171,32 @@ r2v_rdp_init_control_packet(r2v_packet_t *p)
 	r2v_mcs_init_packet(p);
 	p->rdp = p->current;
 	R2V_PACKET_SEEK(p, sizeof(share_control_header_t));
+}
+
+int
+r2v_rdp_recv_control_packet(r2v_rdp_t *r, r2v_packet_t *p,
+							uint8_t *type)
+{
+	uint8_t choice;
+	uint16_t channel_id;
+	share_control_header_t hdr;
+
+	if (r2v_mcs_recv(r->sec->mcs, p, &choice, &channel_id) == -1) {
+		goto fail;
+	}
+	if (!R2V_PACKET_READ_REMAIN(p, sizeof(share_control_header_t))) {
+		goto fail;
+	}
+	R2V_PACKET_READ_N(p, &hdr, sizeof(share_control_header_t));
+	if (hdr.version_low != TS_PROTOCOL_VERSION || hdr.version_high != 0x00) {
+		goto fail;
+	}
+	*type == hdr.type;
+
+	return 0;
+
+fail:
+	return -1;
 }
 
 int

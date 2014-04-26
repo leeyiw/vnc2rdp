@@ -17,8 +17,8 @@ typedef struct _r2v_rdp_t {
 
 typedef struct _share_control_header_t {
 	uint16_t total_length;
-	uint16_t version_low:4;
 	uint16_t type:4;
+	uint16_t version_low:4;
 	uint16_t version_high:8;
 	uint16_t pdu_source;
 } __attribute__ ((packed)) share_control_header_t;
@@ -27,6 +27,8 @@ extern r2v_rdp_t *r2v_rdp_init(int client_fd);
 extern void r2v_rdp_destory(r2v_rdp_t *r);
 extern void r2v_rdp_init_control_packet(r2v_packet_t *p);
 extern void r2v_rdp_init_data_packet(r2v_packet_t *p);
+extern int r2v_rdp_recv_control_packet(r2v_rdp_t *r, r2v_packet_t *p,
+									   uint8_t *type);
 extern int r2v_rdp_send_control_packet(r2v_rdp_t *r, r2v_packet_t *p,
 									   uint8_t type);
 
