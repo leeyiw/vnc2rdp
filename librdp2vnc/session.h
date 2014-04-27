@@ -1,8 +1,15 @@
 #ifndef _SESSION_H_
 #define _SESSION_H_
 
+typedef struct _r2v_rdp_t r2v_rdp_t;
+typedef struct _r2v_vnc_t r2v_vnc_t;
+
 typedef struct _r2v_session_t {
-	r2v_rdp_conn_t *rdp_conn;
+	r2v_rdp_t *rdp;
+	r2v_vnc_t *vnc;
 } r2v_session_t;
+
+extern r2v_session_t *r2v_session_init();
+extern void r2v_session_destory(r2v_session_t *s);
 
 #endif

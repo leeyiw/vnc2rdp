@@ -131,6 +131,9 @@ r2v_x224_destory(r2v_x224_t *x)
 	if (x == NULL) {
 		return;
 	}
+	if (x->tpkt != NULL) {
+		r2v_tpkt_destory(x->tpkt);
+	}
 	free(x);
 }
 

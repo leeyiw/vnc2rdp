@@ -2,6 +2,7 @@
 #define _RDP_H_
 
 #include "sec.h"
+#include "session.h"
 
 #define TS_PROTOCOL_VERSION						0x1
 
@@ -59,6 +60,7 @@
 
 typedef struct _r2v_rdp_t {
 	r2v_sec_t *sec;
+	r2v_session_t *session;
 } r2v_rdp_t;
 
 typedef struct _share_ctrl_hdr_t {
