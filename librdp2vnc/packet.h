@@ -78,6 +78,7 @@ typedef struct _r2v_packet_t {
 	uint8_t *data;
 	uint8_t *current;
 	uint8_t *end;
+	/* RDP layer marks */
 	uint8_t *tpkt;
 	uint8_t *x224;
 	uint8_t *mcs;
