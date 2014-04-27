@@ -52,8 +52,11 @@ r2v_rdp_send_demand_active(r2v_rdp_t *r, r2v_packet_t *p)
 {
 	uint8_t *cap_size_ptr = NULL;
 	uint16_t *length_combined_capabilities = NULL;
+	share_data_hdr_t hdr;
 
-	r2v_rdp_init_control_packet(p);
+	r2v_rdp_init_packet(p, sizeof(share_ctrl_hdr_t));
+	/* shareControlHeader */
+	hdr.share_ctrl_hdr.type = PDUTYPE_DEMANDACTIVEPDU;
 	/* shareId */
 	R2V_PACKET_WRITE_UINT32_LE(p, 0x1000 + r->sec->mcs->user_channel_id);
 	/* lengthSourceDescriptor */
@@ -74,18 +77,18 @@ r2v_rdp_send_demand_active(r2v_rdp_t *r, r2v_packet_t *p)
 	R2V_PACKET_WRITE_UINT32_LE(p, 0);
 
 	R2V_PACKET_END(p);
-	return r2v_rdp_send_control_packet(r, p, PDUTYPE_DEMANDACTIVEPDU);
+	return r2v_rdp_send(r, p, &hdr);
 }
 
 static int
 r2v_rdp_recv_confirm_active(r2v_rdp_t *r, r2v_packet_t *p)
 {
-	uint8_t type;
+	share_data_hdr_t hdr;
 
-	if (r2v_rdp_recv_control_packet(r, p, &type) == -1) {
+	if (r2v_rdp_recv(r, p, &hdr) == -1) {
 		goto fail;
 	}
-	if (type != PDUTYPE_CONFIRMACTIVEPDU) {
+	if (hdr.share_ctrl_hdr.type != PDUTYPE_CONFIRMACTIVEPDU) {
 		goto fail;
 	}
 
@@ -93,6 +96,174 @@ r2v_rdp_recv_confirm_active(r2v_rdp_t *r, r2v_packet_t *p)
 
 fail:
 	return -1;
+}
+
+static int
+r2v_rdp_recv_synchronize(r2v_rdp_t *r, r2v_packet_t *p)
+{
+	share_data_hdr_t hdr;
+
+	if (r2v_rdp_recv(r, p, &hdr) == -1) {
+		goto fail;
+	}
+	if (hdr.share_ctrl_hdr.type != PDUTYPE_DATAPDU ||
+		hdr.pdu_type2 != PDUTYPE2_SYNCHRONIZE) {
+		goto fail;
+	}
+
+	return 0;
+
+fail:
+	return -1;
+}
+
+static int
+r2v_rdp_recv_control_cooperate(r2v_rdp_t *r, r2v_packet_t *p)
+{
+	uint16_t action = 0;
+	share_data_hdr_t hdr;
+
+	if (r2v_rdp_recv(r, p, &hdr) == -1) {
+		goto fail;
+	}
+	if (hdr.share_ctrl_hdr.type != PDUTYPE_DATAPDU ||
+		hdr.pdu_type2 != PDUTYPE2_CONTROL) {
+		goto fail;
+	}
+	/* action */
+	R2V_PACKET_READ_UINT16_LE(p, action);
+	if (action != CTRLACTION_COOPERATE) {
+		goto fail;
+	}
+
+	return 0;
+
+fail:
+	return -1;
+}
+
+static int
+r2v_rdp_recv_control_request(r2v_rdp_t *r, r2v_packet_t *p)
+{
+	uint16_t action = 0;
+	share_data_hdr_t hdr;
+
+	if (r2v_rdp_recv(r, p, &hdr) == -1) {
+		goto fail;
+	}
+	if (hdr.share_ctrl_hdr.type != PDUTYPE_DATAPDU ||
+		hdr.pdu_type2 != PDUTYPE2_CONTROL) {
+		goto fail;
+	}
+	/* action */
+	R2V_PACKET_READ_UINT16_LE(p, action);
+	if (action != CTRLACTION_REQUEST_CONTROL) {
+		goto fail;
+	}
+
+	return 0;
+
+fail:
+	return -1;
+}
+
+static int
+r2v_rdp_recv_font_list(r2v_rdp_t *r, r2v_packet_t *p)
+{
+	share_data_hdr_t hdr;
+
+	if (r2v_rdp_recv(r, p, &hdr) == -1) {
+		goto fail;
+	}
+	if (hdr.share_ctrl_hdr.type != PDUTYPE_DATAPDU ||
+		hdr.pdu_type2 != PDUTYPE2_FONTLIST) {
+		goto fail;
+	}
+
+	return 0;
+
+fail:
+	return -1;
+}
+
+static int
+r2v_rdp_send_synchronize(r2v_rdp_t *r, r2v_packet_t *p)
+{
+	share_data_hdr_t hdr;
+
+	r2v_rdp_init_packet(p, sizeof(share_data_hdr_t));
+	/* shareDataHeader */
+	hdr.share_ctrl_hdr.type = PDUTYPE_DATAPDU;
+	hdr.pdu_type2 = PDUTYPE2_SYNCHRONIZE;
+	/* messageType */
+	R2V_PACKET_WRITE_UINT16_LE(p, SYNCMSGTYPE_SYNC);
+	/* targetUser */
+	R2V_PACKET_WRITE_UINT16_LE(p, MCS_IO_CHANNEL_ID);
+
+	R2V_PACKET_END(p);
+	return r2v_rdp_send(r, p, &hdr);
+}
+
+static int
+r2v_rdp_send_control_cooperate(r2v_rdp_t *r, r2v_packet_t *p)
+{
+	share_data_hdr_t hdr;
+
+	r2v_rdp_init_packet(p, sizeof(share_data_hdr_t));
+	/* shareDataHeader */
+	hdr.share_ctrl_hdr.type = PDUTYPE_DATAPDU;
+	hdr.pdu_type2 = PDUTYPE2_CONTROL;
+	/* action */
+	R2V_PACKET_WRITE_UINT16_LE(p, CTRLACTION_COOPERATE);
+	/* grantId */
+	R2V_PACKET_WRITE_UINT16_LE(p, 0);
+	/* controlId */
+	R2V_PACKET_WRITE_UINT32_LE(p, 0);
+
+	R2V_PACKET_END(p);
+	return r2v_rdp_send(r, p, &hdr);
+}
+
+static int
+r2v_rdp_send_control_grant_control(r2v_rdp_t *r, r2v_packet_t *p)
+{
+	share_data_hdr_t hdr;
+
+	r2v_rdp_init_packet(p, sizeof(share_data_hdr_t));
+	/* shareDataHeader */
+	hdr.share_ctrl_hdr.type = PDUTYPE_DATAPDU;
+	hdr.pdu_type2 = PDUTYPE2_CONTROL;
+	/* action */
+	R2V_PACKET_WRITE_UINT16_LE(p, CTRLACTION_GRANTED_CONTROL);
+	/* grantId */
+	R2V_PACKET_WRITE_UINT16_LE(p, r->sec->mcs->user_channel_id);
+	/* controlId */
+	R2V_PACKET_WRITE_UINT32_LE(p, 0x03EA);
+
+	R2V_PACKET_END(p);
+	return r2v_rdp_send(r, p, &hdr);
+}
+
+static int
+r2v_rdp_send_font_map(r2v_rdp_t *r, r2v_packet_t *p)
+{
+	share_data_hdr_t hdr;
+
+	r2v_rdp_init_packet(p, sizeof(share_data_hdr_t));
+	/* shareDataHeader */
+	hdr.share_ctrl_hdr.type = PDUTYPE_DATAPDU;
+	hdr.pdu_type2 = PDUTYPE2_FONTMAP;
+	/* numberEntries */
+	R2V_PACKET_WRITE_UINT16_LE(p, 0);
+	/* totalNumEntries */
+	R2V_PACKET_WRITE_UINT16_LE(p, 0);
+	/* mapFlags */
+	R2V_PACKET_WRITE_UINT16_LE(p, FONTMAP_FIRST|FONTMAP_LAST);
+	/* entrySize */
+	R2V_PACKET_WRITE_UINT16_LE(p, 0x0004);
+
+	R2V_PACKET_END(p);
+	return r2v_rdp_send(r, p, &hdr);
 }
 
 static int
@@ -115,6 +286,30 @@ r2v_rdp_build_conn(r2v_rdp_t *r)
 		goto fail;
 	}
 	if (r2v_rdp_recv_confirm_active(r, p) == -1) {
+		goto fail;
+	}
+	if (r2v_rdp_recv_synchronize(r, p) == -1) {
+		goto fail;
+	}
+	if (r2v_rdp_recv_control_cooperate(r, p) == -1) {
+		goto fail;
+	}
+	if (r2v_rdp_recv_control_request(r, p) == -1) {
+		goto fail;
+	}
+	if (r2v_rdp_recv_font_list(r, p) == -1) {
+		goto fail;
+	}
+	if (r2v_rdp_send_synchronize(r, p) == -1) {
+		goto fail;
+	}
+	if (r2v_rdp_send_control_cooperate(r, p) == -1) {
+		goto fail;
+	}
+	if (r2v_rdp_send_control_grant_control(r, p) == -1) {
+		goto fail;
+	}
+	if (r2v_rdp_send_font_map(r, p) == -1) {
 		goto fail;
 	}
 
@@ -166,32 +361,34 @@ r2v_rdp_destory(r2v_rdp_t *r)
 }
 
 void
-r2v_rdp_init_control_packet(r2v_packet_t *p)
+r2v_rdp_init_packet(r2v_packet_t *p, uint16_t offset)
 {
 	r2v_mcs_init_packet(p);
 	p->rdp = p->current;
-	R2V_PACKET_SEEK(p, sizeof(share_control_header_t));
+	R2V_PACKET_SEEK(p, offset);
 }
 
 int
-r2v_rdp_recv_control_packet(r2v_rdp_t *r, r2v_packet_t *p,
-							uint8_t *type)
+r2v_rdp_recv(r2v_rdp_t *r, r2v_packet_t *p, share_data_hdr_t *hdr)
 {
 	uint8_t choice;
 	uint16_t channel_id;
-	share_control_header_t hdr;
 
 	if (r2v_mcs_recv(r->sec->mcs, p, &choice, &channel_id) == -1) {
 		goto fail;
 	}
-	if (!R2V_PACKET_READ_REMAIN(p, sizeof(share_control_header_t))) {
+	if (!R2V_PACKET_READ_REMAIN(p, sizeof(share_ctrl_hdr_t))) {
 		goto fail;
 	}
-	R2V_PACKET_READ_N(p, &hdr, sizeof(share_control_header_t));
-	if (hdr.version_low != TS_PROTOCOL_VERSION || hdr.version_high != 0x00) {
+	R2V_PACKET_READ_N(p, &(hdr->share_ctrl_hdr), sizeof(share_ctrl_hdr_t));
+	if (hdr->share_ctrl_hdr.version_low != TS_PROTOCOL_VERSION ||
+		hdr->share_ctrl_hdr.version_high != 0x00) {
 		goto fail;
 	}
-	*type == hdr.type;
+	if (hdr->share_ctrl_hdr.type == PDUTYPE_DATAPDU) {
+		R2V_PACKET_READ_N(p, (void *)hdr + sizeof(share_ctrl_hdr_t),
+						  sizeof(share_data_hdr_t) - sizeof(share_ctrl_hdr_t));
+	}
 
 	return 0;
 
@@ -200,19 +397,27 @@ fail:
 }
 
 int
-r2v_rdp_send_control_packet(r2v_rdp_t *r, r2v_packet_t *p,
-							uint8_t type)
+r2v_rdp_send(r2v_rdp_t *r, r2v_packet_t *p, share_data_hdr_t *hdr)
 {
-	share_control_header_t hdr;
-
-	hdr.total_length = p->end - p->rdp;
-	hdr.version_low = TS_PROTOCOL_VERSION;
-	hdr.type = type;
-	hdr.version_high = 0x00;
-	hdr.pdu_source = MCS_IO_CHANNEL_ID;
+	hdr->share_ctrl_hdr.total_length = p->end - p->rdp;
+	hdr->share_ctrl_hdr.version_low = TS_PROTOCOL_VERSION;
+	hdr->share_ctrl_hdr.version_high = 0x00;
+	hdr->share_ctrl_hdr.pdu_source = MCS_IO_CHANNEL_ID;
+	if (hdr->share_ctrl_hdr.type == PDUTYPE_DATAPDU) {
+		hdr->share_id = 0x1000 + r->sec->mcs->user_channel_id;
+		hdr->pad1 = 0;
+		hdr->stream_id = STREAM_LOW;
+		hdr->uncompressed_length = p->end - p->rdp - 14;
+		hdr->compressed_type = 0;
+		hdr->compressed_length = 0;
+	}
 
 	p->current = p->rdp;
-	R2V_PACKET_WRITE_N(p, &hdr, sizeof(share_control_header_t));
+	if (hdr->share_ctrl_hdr.type == PDUTYPE_DATAPDU) {
+		R2V_PACKET_WRITE_N(p, hdr, sizeof(share_data_hdr_t));
+	} else {
+		R2V_PACKET_WRITE_N(p, &(hdr->share_ctrl_hdr), sizeof(share_ctrl_hdr_t));
+	}
 
 	return r2v_mcs_send(r->sec->mcs, p, MCS_SEND_DATA_INDICATION,
 						MCS_IO_CHANNEL_ID);
