@@ -11,7 +11,7 @@ void
 process_connection(int client_fd)
 {
 	int server_fd;
-	const char *ip = "192.168.1.110";
+	const char *ip = "127.0.0.1";
 	const uint16_t port = 5901;
 	struct sockaddr_in server_addr;
 

@@ -47,12 +47,38 @@ r2v_vnc_build_conn(r2v_vnc_t *v)
 	if (r2v_vnc_recv(v) == -1) {
 		goto fail;
 	}
+
 	/* send ProtocolVersion */
 	r2v_packet_reset(v->packet);
 	R2V_PACKET_WRITE_N(v->packet, RFB_PROTOCOL_VERSION,
 					   strlen(RFB_PROTOCOL_VERSION));
 	R2V_PACKET_END(v->packet);
 	if (r2v_vnc_send(v) == -1) {
+		goto fail;
+	}
+
+	/* receive security-type */
+	if (r2v_vnc_recv(v) == -1) {
+		goto fail;
+	}
+	R2V_PACKET_READ_UINT32_BE(v->packet, v->security_type);
+	switch (v->security_type) {
+	case RFB_SEC_TYPE_NONE:
+		break;
+	default:
+		goto fail;
+	}
+
+	/* send ClientInit message */
+	r2v_packet_reset(v->packet);
+	R2V_PACKET_WRITE_UINT8(v->packet, 1);
+	R2V_PACKET_END(v->packet);
+	if (r2v_vnc_send(v) == -1) {
+		goto fail;
+	}
+
+	/* recv ServerInit message */
+	if (r2v_vnc_recv(v) == -1) {
 		goto fail;
 	}
 

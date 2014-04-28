@@ -24,10 +24,10 @@
 	do { \
 		(v) = (uint32_t) \
 			( \
-				(*((uint8_t *)((p)->current + 0)) << 0) | \
-				(*((uint8_t *)((p)->current + 1)) << 8) | \
-				(*((uint8_t *)((p)->current + 2)) << 16) | \
-				(*((uint8_t *)((p)->current + 3)) << 24) \
+				(*((uint8_t *)((p)->current + 0)) << 24) | \
+				(*((uint8_t *)((p)->current + 1)) << 16) | \
+				(*((uint8_t *)((p)->current + 2)) << 8) | \
+				(*((uint8_t *)((p)->current + 3)) << 0) \
 			); \
 		(p)->current += sizeof(uint32_t); \
 	} while (0)

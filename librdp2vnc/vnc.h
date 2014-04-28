@@ -6,9 +6,14 @@
 
 #define RFB_PROTOCOL_VERSION			"RFB 003.003\n"
 
+#define RFB_SEC_TYPE_NONE				1
+#define RFB_SEC_TYPE_VNC_AUTH			2
+
 typedef struct _r2v_vnc_t {
 	int fd;
 	r2v_packet_t *packet;
+
+	uint32_t security_type;
 
 	r2v_session_t *session;
 } r2v_vnc_t;
