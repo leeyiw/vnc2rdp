@@ -6,7 +6,8 @@
 #include "sec.h"
 
 static int
-r2v_mcs_parse_ber_encoding(r2v_packet_t *p, uint16_t identifier, uint16_t *length)
+r2v_mcs_parse_ber_encoding(r2v_packet_t *p, uint16_t identifier,
+						   uint16_t *length)
 {
 	/* BER-encoding see http://en.wikipedia.org/wiki/X.690 */
 	uint16_t id, len, i, l;
@@ -147,7 +148,8 @@ fail:
 }
 
 static int
-r2v_mcs_write_ber_encoding(r2v_packet_t *p, uint16_t identifier, uint16_t length)
+r2v_mcs_write_ber_encoding(r2v_packet_t *p, uint16_t identifier,
+						   uint16_t length)
 {
 	/* BER-encoding see http://en.wikipedia.org/wiki/X.690 */
 	if (identifier > 0xFF) {

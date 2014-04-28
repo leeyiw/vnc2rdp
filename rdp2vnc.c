@@ -16,7 +16,7 @@ process_connection(int client_fd)
 	struct sockaddr_in server_addr;
 
 	r2v_session_t *session = NULL;
-	
+
 	session = r2v_session_init();
 
 	/* accept RDP connection */
