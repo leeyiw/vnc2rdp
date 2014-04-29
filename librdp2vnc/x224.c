@@ -91,6 +91,7 @@ r2v_x224_build_conn(r2v_x224_t *x)
 	R2V_PACKET_END(p);
 	r2v_tpkt_send(x->tpkt, p);
 
+	r2v_packet_destory(p);
 	return 0;
 
 fail:

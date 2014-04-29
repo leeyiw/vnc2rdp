@@ -1,11 +1,21 @@
 #include <arpa/inet.h>
+#include <signal.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "log.h"
 #include "rdp.h"
 #include "session.h"
 #include "vnc.h"
+
+int g_process = 1;
+
+void
+sigint_handler(int signal)
+{
+	g_process = 0;
+}
 
 void
 process_connection(int client_fd)
@@ -64,6 +74,17 @@ main(int argc, char *argv[])
 	struct sockaddr_in listen_addr;
 	const char *ip = "0.0.0.0";
 	const uint16_t port = 3389;
+	struct sigaction act;
+
+	/* set SIGINT signal handler */
+	memset(&act, 0, sizeof(act));
+	act.sa_handler = sigint_handler;
+	sigemptyset(&act.sa_mask);
+	act.sa_flags = 0;
+	if (sigaction(SIGINT, &act, NULL) < 0) {
+		r2v_log_error("register signal 'SIGINT' handler error: %s", ERRMSG);
+		exit(EXIT_FAILURE);
+	}
 
 	if ((listen_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 		r2v_log_error("create listen socket error: %s", ERRMSG);
@@ -97,7 +118,7 @@ main(int argc, char *argv[])
 	}
 
 	r2v_log_info("listening new connection");
-	while (1) {
+	while (g_process) {
 		client_fd = accept(listen_fd, NULL, NULL);
 		if (client_fd == -1) {
 			r2v_log_error("accept new connection error: %s", ERRMSG);
@@ -105,5 +126,7 @@ main(int argc, char *argv[])
 		}
 		process_connection(client_fd);
 	}
+	close(listen_fd);
+
 	return 0;
 }
