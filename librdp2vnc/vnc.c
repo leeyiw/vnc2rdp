@@ -81,6 +81,70 @@ r2v_vnc_build_conn(r2v_vnc_t *v)
 	if (r2v_vnc_recv(v) == -1) {
 		goto fail;
 	}
+	R2V_PACKET_READ_UINT16_BE(v->packet, v->framebuffer_width);
+	R2V_PACKET_READ_UINT16_BE(v->packet, v->framebuffer_height);
+
+	/* send SetPixelFormat message */
+	r2v_packet_reset(v->packet);
+	R2V_PACKET_WRITE_UINT8(v->packet, RFB_SET_PIXEL_FORMAT);
+	R2V_PACKET_WRITE_UINT8(v->packet, 0);
+	R2V_PACKET_WRITE_UINT8(v->packet, 0);
+	R2V_PACKET_WRITE_UINT8(v->packet, 0);
+	/* bits-per-pixel */
+	R2V_PACKET_WRITE_UINT8(v->packet, 32);
+	/* depth */
+	R2V_PACKET_WRITE_UINT8(v->packet, 24);
+	/* big-endian-flag */
+	R2V_PACKET_WRITE_UINT8(v->packet, 0);
+	/* true-colour-flag */
+	R2V_PACKET_WRITE_UINT8(v->packet, 1);
+	/* red-max */
+	R2V_PACKET_WRITE_UINT16_BE(v->packet, 255);
+	/* green-max */
+	R2V_PACKET_WRITE_UINT16_BE(v->packet, 255);
+	/* blue-max */
+	R2V_PACKET_WRITE_UINT16_BE(v->packet, 255);
+	/* red-shift */
+	R2V_PACKET_WRITE_UINT8(v->packet, 16);
+	/* green-shift */
+	R2V_PACKET_WRITE_UINT8(v->packet, 8);
+	/* blue-shift */
+	R2V_PACKET_WRITE_UINT8(v->packet, 0);
+	/* padding */
+	R2V_PACKET_WRITE_UINT8(v->packet, 0);
+	R2V_PACKET_WRITE_UINT8(v->packet, 0);
+	R2V_PACKET_WRITE_UINT8(v->packet, 0);
+	R2V_PACKET_END(v->packet);
+	if (r2v_vnc_send(v) == -1) {
+		goto fail;
+	}
+
+	/* send SetEncodings message */
+	r2v_packet_reset(v->packet);
+	R2V_PACKET_WRITE_UINT8(v->packet, RFB_SET_ENCODINGS);
+	R2V_PACKET_WRITE_UINT8(v->packet, 0);
+	R2V_PACKET_WRITE_UINT16_BE(v->packet, 4);
+	R2V_PACKET_WRITE_SINT32_BE(v->packet, RFB_ENCODING_RAW);
+	R2V_PACKET_WRITE_SINT32_BE(v->packet, RFB_ENCODING_COPYRECT);
+	R2V_PACKET_WRITE_SINT32_BE(v->packet, RFB_ENCODING_CURSOR);
+	R2V_PACKET_WRITE_SINT32_BE(v->packet, RFB_ENCODING_DESKTOP_SIZE);
+	R2V_PACKET_END(v->packet);
+	if (r2v_vnc_send(v) == -1) {
+		goto fail;
+	}
+
+	/* send FramebufferUpdateRequest message */
+	r2v_packet_reset(v->packet);
+	R2V_PACKET_WRITE_UINT8(v->packet, RFB_FRAME_BUFFER_UPDATE_REQUEST);
+	R2V_PACKET_WRITE_UINT8(v->packet, 0);
+	R2V_PACKET_WRITE_UINT16_BE(v->packet, 0);
+	R2V_PACKET_WRITE_UINT16_BE(v->packet, 0);
+	R2V_PACKET_WRITE_UINT16_BE(v->packet, v->framebuffer_width);
+	R2V_PACKET_WRITE_UINT16_BE(v->packet, v->framebuffer_height);
+	R2V_PACKET_END(v->packet);
+	if (r2v_vnc_send(v) == -1) {
+		goto fail;
+	}
 
 	return 0;
 
