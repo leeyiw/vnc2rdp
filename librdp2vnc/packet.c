@@ -4,7 +4,7 @@
 #include "packet.h"
 
 r2v_packet_t *
-r2v_packet_init(int max_len)
+r2v_packet_init(size_t max_len)
 {
 	r2v_packet_t *p = NULL;
 

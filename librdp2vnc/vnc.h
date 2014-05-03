@@ -44,6 +44,6 @@ typedef struct _r2v_vnc_t {
 
 extern r2v_vnc_t *r2v_vnc_init();
 extern void r2v_vnc_destory(r2v_vnc_t *v);
-extern void r2v_vnc_data_in(r2v_vnc_t *v);
+extern int r2v_vnc_process_data(r2v_vnc_t *v);
 
 #endif

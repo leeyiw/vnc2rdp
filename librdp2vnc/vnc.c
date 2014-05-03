@@ -25,19 +25,17 @@ fail:
 }
 
 static int
-r2v_vnc_recv1(r2v_vnc_t *v, void *buf, int len)
+r2v_vnc_recv1(r2v_vnc_t *v, size_t len)
 {
-	int n, received = 0;
+	int n = 0;
 
-	while (len - received > 0) {
-		n = recv(v->fd, buf + received, len - received, 0);
-		if (n == -1) {
-			goto fail;
-		} else if (n == 0) {
-			goto fail;
-		}
-		received += n;
+	r2v_packet_reset(v->packet);
+
+	n = recv(v->fd, v->packet->current, len, MSG_WAITALL);
+	if (n == -1 || n == 0) {
+		goto fail;
 	}
+	v->packet->end += n;
 
 	return 0;
 
@@ -144,10 +142,10 @@ r2v_vnc_build_conn(r2v_vnc_t *v)
 	r2v_packet_reset(v->packet);
 	R2V_PACKET_WRITE_UINT8(v->packet, RFB_SET_ENCODINGS);
 	R2V_PACKET_WRITE_UINT8(v->packet, 0);
-	R2V_PACKET_WRITE_UINT16_BE(v->packet, 4);
+	R2V_PACKET_WRITE_UINT16_BE(v->packet, 3);
 	R2V_PACKET_WRITE_SINT32_BE(v->packet, RFB_ENCODING_RAW);
 	R2V_PACKET_WRITE_SINT32_BE(v->packet, RFB_ENCODING_COPYRECT);
-	R2V_PACKET_WRITE_SINT32_BE(v->packet, RFB_ENCODING_CURSOR);
+	//R2V_PACKET_WRITE_SINT32_BE(v->packet, RFB_ENCODING_CURSOR);
 	R2V_PACKET_WRITE_SINT32_BE(v->packet, RFB_ENCODING_DESKTOP_SIZE);
 	R2V_PACKET_END(v->packet);
 	if (r2v_vnc_send(v) == -1) {
@@ -217,22 +215,68 @@ r2v_vnc_destory(r2v_vnc_t *v)
 	free(v);
 }
 
-void
-r2v_vnc_data_in(r2v_vnc_t *v)
+static int
+r2v_vnc_process_framebuffer_update(r2v_vnc_t *v)
+{
+	uint16_t nrecs = 0, i = 0, x, y, w, h;
+	int32_t encoding_type;
+	uint32_t data_size;
+
+	if (r2v_vnc_recv1(v, 3) == -1) {
+		goto fail;
+	}
+	R2V_PACKET_SEEK_UINT8(v->packet);
+	R2V_PACKET_READ_UINT16_BE(v->packet, nrecs);
+
+	for (i = 0; i < nrecs; i++) {
+		if (r2v_vnc_recv1(v, 12) == -1) {
+			goto fail;
+		}
+		R2V_PACKET_READ_UINT16_BE(v->packet, x);
+		R2V_PACKET_READ_UINT16_BE(v->packet, y);
+		R2V_PACKET_READ_UINT16_BE(v->packet, w);
+		R2V_PACKET_READ_UINT16_BE(v->packet, h);
+		R2V_PACKET_READ_UINT32_BE(v->packet, encoding_type);
+		switch (encoding_type) {
+		case RFB_ENCODING_RAW:
+			data_size = w * h * 4;
+			/* if data size is larger than vnc packet's buffer, 
+			 * init a new packet with a larger buffer */
+			if (data_size > v->packet->max_len) {
+				r2v_packet_destory(v->packet);
+				v->packet = r2v_packet_init(data_size);
+				if (v->packet == NULL) {
+					goto fail;
+				}
+			}
+			if (r2v_vnc_recv1(v, data_size) == -1) {
+				goto fail;
+			}
+			break;
+		}
+	}
+
+fail:
+	return -1;
+}
+
+int
+r2v_vnc_process_data(r2v_vnc_t *v)
 {
 	uint8_t msg_type;
 
-	if (r2v_vnc_recv1(v, &msg_type, sizeof(msg_type)) == -1) {
+	if (r2v_vnc_recv1(v, 1) == -1) {
 		goto fail;
 	}
+	R2V_PACKET_READ_UINT8(v->packet, msg_type);
 	switch (msg_type) {
 	case RFB_FRAMEBUFFER_UPDATE:
-		break;
+		return r2v_vnc_process_framebuffer_update(v);
 	default:
 		goto fail;
 		break;
 	}
 
 fail:
-	return;
+	return -1;
 }

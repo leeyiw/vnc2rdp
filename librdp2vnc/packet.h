@@ -81,7 +81,7 @@
 #define R2V_PACKET_LEN(p)				((p)->end - (p)->data)
 
 typedef struct _r2v_packet_t {
-	uint16_t max_len;
+	uint32_t max_len;
 	uint8_t *data;
 	uint8_t *current;
 	uint8_t *end;
@@ -93,7 +93,7 @@ typedef struct _r2v_packet_t {
 	uint8_t *rdp;
 } r2v_packet_t;
 
-extern r2v_packet_t *r2v_packet_init(int max_len);
+extern r2v_packet_t *r2v_packet_init(size_t max_len);
 extern void r2v_packet_reset(r2v_packet_t *p);
 extern void r2v_packet_destory(r2v_packet_t *p);
 
