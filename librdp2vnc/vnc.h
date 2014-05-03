@@ -9,12 +9,19 @@
 #define RFB_SEC_TYPE_NONE				1
 #define RFB_SEC_TYPE_VNC_AUTH			2
 
+/* client to server messages */
 #define RFB_SET_PIXEL_FORMAT			0
 #define RFB_SET_ENCODINGS				2
-#define RFB_FRAME_BUFFER_UPDATE_REQUEST	3
+#define RFB_FRAMEBUFFER_UPDATE_REQUEST	3
 #define RFB_KEY_EVENT					4
 #define RFB_POINTER_EVENT				5
 #define RFB_CLIENT_CUT_TEXT				6
+
+/* server to client messages */
+#define RFB_FRAMEBUFFER_UPDATE			0
+#define RFB_SET_COLOUR_MAP_ENTRIES		1
+#define RFB_BELL						2
+#define RFB_SERVER_CUT_TEXT				3
 
 #define RFB_ENCODING_RAW				0
 #define RFB_ENCODING_COPYRECT			1
@@ -37,5 +44,6 @@ typedef struct _r2v_vnc_t {
 
 extern r2v_vnc_t *r2v_vnc_init();
 extern void r2v_vnc_destory(r2v_vnc_t *v);
+extern void r2v_vnc_data_in(r2v_vnc_t *v);
 
 #endif

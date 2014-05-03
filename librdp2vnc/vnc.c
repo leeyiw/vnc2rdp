@@ -25,6 +25,27 @@ fail:
 }
 
 static int
+r2v_vnc_recv1(r2v_vnc_t *v, void *buf, int len)
+{
+	int n, received = 0;
+
+	while (len - received > 0) {
+		n = recv(v->fd, buf + received, len - received, 0);
+		if (n == -1) {
+			goto fail;
+		} else if (n == 0) {
+			goto fail;
+		}
+		received += n;
+	}
+
+	return 0;
+
+fail:
+	return -1;
+}
+
+static int
 r2v_vnc_send(r2v_vnc_t *v)
 {
 	int n = 0;
@@ -135,7 +156,7 @@ r2v_vnc_build_conn(r2v_vnc_t *v)
 
 	/* send FramebufferUpdateRequest message */
 	r2v_packet_reset(v->packet);
-	R2V_PACKET_WRITE_UINT8(v->packet, RFB_FRAME_BUFFER_UPDATE_REQUEST);
+	R2V_PACKET_WRITE_UINT8(v->packet, RFB_FRAMEBUFFER_UPDATE_REQUEST);
 	R2V_PACKET_WRITE_UINT8(v->packet, 0);
 	R2V_PACKET_WRITE_UINT16_BE(v->packet, 0);
 	R2V_PACKET_WRITE_UINT16_BE(v->packet, 0);
@@ -194,4 +215,24 @@ r2v_vnc_destory(r2v_vnc_t *v)
 		r2v_packet_destory(v->packet);
 	}
 	free(v);
+}
+
+void
+r2v_vnc_data_in(r2v_vnc_t *v)
+{
+	uint8_t msg_type;
+
+	if (r2v_vnc_recv1(v, &msg_type, sizeof(msg_type)) == -1) {
+		goto fail;
+	}
+	switch (msg_type) {
+	case RFB_FRAMEBUFFER_UPDATE:
+		break;
+	default:
+		goto fail;
+		break;
+	}
+
+fail:
+	return;
 }

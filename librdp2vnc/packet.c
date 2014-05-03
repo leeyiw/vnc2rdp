@@ -34,7 +34,6 @@ r2v_packet_reset(r2v_packet_t *p)
 	if (p == NULL) {
 		return;
 	}
-	memset(p->data, 0, p->max_len);
 	p->current = p->data;
 	p->end = p->data;
 	p->tpkt = NULL;
