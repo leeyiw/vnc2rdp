@@ -31,8 +31,44 @@ r2v_cap_write_general_cap(r2v_packet_t *p)
 	R2V_PACKET_WRITE_UINT8(p, 0x00);
 }
 
+static void
+r2v_cap_write_bitmap_cap(r2v_packet_t *p)
+{
+	/* capabilitySetType */
+	R2V_PACKET_WRITE_UINT16_LE(p, CAPSTYPE_BITMAP);
+	/* lengthCapability */
+	R2V_PACKET_WRITE_UINT16_LE(p, 28);
+	/* preferredBitsPerPixel */
+	R2V_PACKET_WRITE_UINT16_LE(p, 32);
+	/* receive1BitPerPixel */
+	R2V_PACKET_WRITE_UINT16_LE(p, 0x0001);
+	/* receive4BitsPerPixel */
+	R2V_PACKET_WRITE_UINT16_LE(p, 0x0001);
+	/* receive8BitsPerPixel */
+	R2V_PACKET_WRITE_UINT16_LE(p, 0x0001);
+	/* desktopWidth */
+	R2V_PACKET_WRITE_UINT16_LE(p, 1024);
+	/* desktopHeight */
+	R2V_PACKET_WRITE_UINT16_LE(p, 768);
+	/* pad2octets */
+	R2V_PACKET_WRITE_UINT16_LE(p, 0);
+	/* desktopResizeFlag */
+	R2V_PACKET_WRITE_UINT16_LE(p, 0x0001);
+	/* bitmapCompressionFlag */
+	R2V_PACKET_WRITE_UINT16_LE(p, 0x0001);
+	/* highColorFlags */
+	R2V_PACKET_WRITE_UINT16_LE(p, 0);
+	/* drawingFlags */
+	R2V_PACKET_WRITE_UINT8(p, 0x00);
+	/* multipleRectangleSupport */
+	R2V_PACKET_WRITE_UINT16_LE(p, 0x0001);
+	/* pad2octetsB */
+	R2V_PACKET_WRITE_UINT16_LE(p, 0);
+}
+
 r2v_cap_write_func r2v_cap_write_func_list[] = {
-	r2v_cap_write_general_cap
+	r2v_cap_write_general_cap,
+	r2v_cap_write_bitmap_cap
 };
 
 uint16_t

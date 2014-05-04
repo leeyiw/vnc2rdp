@@ -1,3 +1,5 @@
+#include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,6 +12,7 @@
 r2v_tpkt_t *
 r2v_tpkt_init(int client_fd)
 {
+	int optval;
 	r2v_tpkt_t *t = NULL;
 
 	t = (r2v_tpkt_t *)malloc(sizeof(r2v_tpkt_t));
@@ -19,6 +22,12 @@ r2v_tpkt_init(int client_fd)
 	memset(t, 0, sizeof(r2v_tpkt_t));
 
 	t->fd = client_fd;
+	/* disable Negle algorithm */
+	optval = 1;
+	if (setsockopt(t->fd, IPPROTO_TCP, TCP_NODELAY, &optval, sizeof(optval))
+		== -1) {
+		goto fail;
+	}
 
 	return t;
 

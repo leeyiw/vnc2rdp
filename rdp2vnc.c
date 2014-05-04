@@ -35,6 +35,7 @@ process_connection(int client_fd)
 		r2v_log_error("accept new rdp connection error");
 		goto fail;
 	}
+	session->rdp->session = session;
 	r2v_log_info("accept new rdp connection success");
 
 	/* connect to VNC server */
@@ -60,7 +61,10 @@ process_connection(int client_fd)
 		r2v_log_error("connect to vnc server error");
 		goto fail;
 	}
+	session->vnc->session = session;
 	r2v_log_info("connect to vnc server success");
+
+	r2v_session_transmit(session);
 
 fail:
 	r2v_session_destory(session);

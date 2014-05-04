@@ -58,6 +58,16 @@
 #define FONTMAP_FIRST							0x0001
 #define FONTMAP_LAST							0x0002
 
+/* Server Graphics Update PDU - updateType */
+#define UPDATETYPE_ORDERS						0x0000
+#define UPDATETYPE_BITMAP						0x0001
+#define UPDATETYPE_PALETTE						0x0002
+#define UPDATETYPE_SYNCHRONIZE					0x0003
+
+/* Bitmap Data - flags */
+#define BITMAP_COMPRESSION						0x0001
+#define NO_BITMAP_COMPRESSION_HDR				0x0400
+
 typedef struct _r2v_rdp_t {
 	r2v_sec_t *sec;
 	r2v_session_t *session;

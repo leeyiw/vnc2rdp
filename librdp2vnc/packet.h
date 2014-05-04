@@ -1,6 +1,7 @@
 #ifndef _PACKET_H_
 #define _PACKET_H_
 
+#include <stddef.h>
 #include <stdint.h>
 
 #define R2V_PACKET_READ_REMAIN(p, n) \

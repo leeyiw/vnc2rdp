@@ -3,6 +3,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include "rdp.h"
 #include "vnc.h"
 
 static int
@@ -221,6 +222,8 @@ r2v_vnc_process_framebuffer_update(r2v_vnc_t *v)
 	uint16_t nrecs = 0, i = 0, x, y, w, h;
 	int32_t encoding_type;
 	uint32_t data_size;
+	r2v_packet_t *p = NULL;
+	share_data_hdr_t hdr;
 
 	if (r2v_vnc_recv1(v, 3) == -1) {
 		goto fail;
@@ -252,6 +255,50 @@ r2v_vnc_process_framebuffer_update(r2v_vnc_t *v)
 			if (r2v_vnc_recv1(v, data_size) == -1) {
 				goto fail;
 			}
+			if (data_size > 1024) {
+				continue;
+			}
+
+			printf("data_size: %d, x: %d, y: %d, w: %d, h: %d\n", data_size, x, y, w, h);
+			/* init RDP bitmap update packet */
+			p = r2v_packet_init(data_size + 100);
+			if (p == NULL) {
+				goto fail;
+			}
+			r2v_rdp_init_packet(p, sizeof(share_data_hdr_t));
+			/* shareDataHeader */
+			hdr.share_ctrl_hdr.type = PDUTYPE_DATAPDU;
+			hdr.pdu_type2 = PDUTYPE2_UPDATE;
+			/* updateType */
+			R2V_PACKET_WRITE_UINT16_LE(p, UPDATETYPE_BITMAP);
+			/* numberRectangles */
+			R2V_PACKET_WRITE_UINT16_LE(p, 1);
+			/* destLeft */
+			R2V_PACKET_WRITE_UINT16_LE(p, x);
+			/* destTop */
+			R2V_PACKET_WRITE_UINT16_LE(p, v->framebuffer_height - y - h);
+			/* destRight */
+			R2V_PACKET_WRITE_UINT16_LE(p, x + w - 1);
+			/* destBottom */
+			R2V_PACKET_WRITE_UINT16_LE(p, v->framebuffer_height - y - 1);
+			/* width */
+			R2V_PACKET_WRITE_UINT16_LE(p, w);
+			/* height */
+			R2V_PACKET_WRITE_UINT16_LE(p, h);
+			/* bitsPerPixel */
+			R2V_PACKET_WRITE_UINT16_LE(p, 32);
+			/* flags */
+			R2V_PACKET_WRITE_UINT16_LE(p, NO_BITMAP_COMPRESSION_HDR);
+			/* bitmapLength */
+			R2V_PACKET_WRITE_UINT16_LE(p, data_size);
+			/* bitmapDataStream */
+			R2V_PACKET_WRITE_N(p, v->packet->data, data_size);
+			/* send packet */
+			R2V_PACKET_END(p);
+			if (r2v_rdp_send(v->session->rdp, p, &hdr) == -1) {
+				goto fail;
+			}
+			sleep(100);
 			break;
 		}
 	}
