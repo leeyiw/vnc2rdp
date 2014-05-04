@@ -69,8 +69,9 @@ r2v_session_transmit(r2v_session_t *s)
 		}
 		for (i = 0; i < nfds; i++) {
 			if (events[i].data.fd == s->vnc->fd) {
-				r2v_vnc_process_data(s->vnc);
-				goto fail;
+				if (r2v_vnc_process_data(s->vnc) == -1) {
+					goto fail;
+				}
 			}
 		}
 	}

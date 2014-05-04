@@ -156,6 +156,7 @@ r2v_vnc_build_conn(r2v_vnc_t *v)
 	/* send FramebufferUpdateRequest message */
 	r2v_packet_reset(v->packet);
 	R2V_PACKET_WRITE_UINT8(v->packet, RFB_FRAMEBUFFER_UPDATE_REQUEST);
+	/* incremental */
 	R2V_PACKET_WRITE_UINT8(v->packet, 0);
 	R2V_PACKET_WRITE_UINT16_BE(v->packet, 0);
 	R2V_PACKET_WRITE_UINT16_BE(v->packet, 0);
@@ -255,7 +256,7 @@ r2v_vnc_process_framebuffer_update(r2v_vnc_t *v)
 			if (r2v_vnc_recv1(v, data_size) == -1) {
 				goto fail;
 			}
-			if (data_size > 1024) {
+			if (data_size > 10000) {
 				continue;
 			}
 
@@ -298,10 +299,25 @@ r2v_vnc_process_framebuffer_update(r2v_vnc_t *v)
 			if (r2v_rdp_send(v->session->rdp, p, &hdr) == -1) {
 				goto fail;
 			}
-			sleep(100);
 			break;
 		}
 	}
+
+	/* send FramebufferUpdateRequest message */
+	r2v_packet_reset(v->packet);
+	R2V_PACKET_WRITE_UINT8(v->packet, RFB_FRAMEBUFFER_UPDATE_REQUEST);
+	/* incremental */
+	R2V_PACKET_WRITE_UINT8(v->packet, 1);
+	R2V_PACKET_WRITE_UINT16_BE(v->packet, 0);
+	R2V_PACKET_WRITE_UINT16_BE(v->packet, 0);
+	R2V_PACKET_WRITE_UINT16_BE(v->packet, v->framebuffer_width);
+	R2V_PACKET_WRITE_UINT16_BE(v->packet, v->framebuffer_height);
+	R2V_PACKET_END(v->packet);
+	if (r2v_vnc_send(v) == -1) {
+		goto fail;
+	}
+
+	return 0;
 
 fail:
 	return -1;
@@ -323,6 +339,8 @@ r2v_vnc_process_data(r2v_vnc_t *v)
 		goto fail;
 		break;
 	}
+
+	return 0;
 
 fail:
 	return -1;
