@@ -97,5 +97,11 @@ extern void r2v_rdp_destory(r2v_rdp_t *r);
 extern void r2v_rdp_init_packet(r2v_packet_t *p, uint16_t offset);
 extern int r2v_rdp_recv(r2v_rdp_t *r, r2v_packet_t *p, share_data_hdr_t *hdr);
 extern int r2v_rdp_send(r2v_rdp_t *r, r2v_packet_t *p, share_data_hdr_t *hdr);
+extern int r2v_rdp_send_bitmap_update(r2v_rdp_t *r, r2v_packet_t *p,
+									  uint16_t left, uint16_t top,
+									  uint16_t right, uint16_t bottom,
+									  uint16_t width, uint16_t height,
+									  uint16_t bpp, uint16_t bitmap_length,
+									  uint8_t *data);
 
 #endif

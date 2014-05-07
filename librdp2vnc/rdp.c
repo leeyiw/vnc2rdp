@@ -422,3 +422,53 @@ r2v_rdp_send(r2v_rdp_t *r, r2v_packet_t *p, share_data_hdr_t *hdr)
 	return r2v_mcs_send(r->sec->mcs, p, MCS_SEND_DATA_INDICATION,
 						MCS_IO_CHANNEL_ID);
 }
+
+int
+r2v_rdp_send_bitmap_update(r2v_rdp_t *r, r2v_packet_t *p,
+						   uint16_t left, uint16_t top,
+						   uint16_t right, uint16_t bottom,
+						   uint16_t width, uint16_t height,
+						   uint16_t bpp, uint16_t bitmap_length,
+						   uint8_t *bitmap_data)
+{
+	share_data_hdr_t hdr;
+
+	r2v_rdp_init_packet(p, sizeof(share_data_hdr_t));
+	/* shareDataHeader */
+	hdr.share_ctrl_hdr.type = PDUTYPE_DATAPDU;
+	hdr.pdu_type2 = PDUTYPE2_UPDATE;
+	/* updateType */
+	R2V_PACKET_WRITE_UINT16_LE(p, UPDATETYPE_BITMAP);
+	/* numberRectangles */
+	R2V_PACKET_WRITE_UINT16_LE(p, 1);
+	/* destLeft */
+	R2V_PACKET_WRITE_UINT16_LE(p, left);
+	/* destTop */
+	R2V_PACKET_WRITE_UINT16_LE(p, top);
+	/* destRight */
+	R2V_PACKET_WRITE_UINT16_LE(p, right);
+	/* destBottom */
+	R2V_PACKET_WRITE_UINT16_LE(p, bottom);
+	/* width */
+	R2V_PACKET_WRITE_UINT16_LE(p, width);
+	/* height */
+	R2V_PACKET_WRITE_UINT16_LE(p, height);
+	/* bitsPerPixel */
+	R2V_PACKET_WRITE_UINT16_LE(p, bpp);
+	/* flags */
+	R2V_PACKET_WRITE_UINT16_LE(p, NO_BITMAP_COMPRESSION_HDR);
+	/* bitmapLength */
+	R2V_PACKET_WRITE_UINT16_LE(p, bitmap_length);
+	/* bitmapDataStream */
+	R2V_PACKET_WRITE_N(p, bitmap_data, bitmap_length);
+	/* send packet */
+	R2V_PACKET_END(p);
+	if (r2v_rdp_send(r, p, &hdr) == -1) {
+		goto fail;
+	}
+
+	return 0;
+
+fail:
+	return -1;
+}
