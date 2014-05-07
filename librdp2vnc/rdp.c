@@ -424,16 +424,21 @@ r2v_rdp_send(r2v_rdp_t *r, r2v_packet_t *p, share_data_hdr_t *hdr)
 }
 
 int
-r2v_rdp_send_bitmap_update(r2v_rdp_t *r, r2v_packet_t *p,
-						   uint16_t left, uint16_t top,
+r2v_rdp_send_bitmap_update(r2v_rdp_t *r, uint16_t left, uint16_t top,
 						   uint16_t right, uint16_t bottom,
 						   uint16_t width, uint16_t height,
 						   uint16_t bpp, uint16_t bitmap_length,
 						   uint8_t *bitmap_data)
 {
+	r2v_packet_t *p = NULL;
 	share_data_hdr_t hdr;
 
+	p = r2v_packet_init(bitmap_length + 100);
+	if (p == NULL) {
+		goto fail;
+	}
 	r2v_rdp_init_packet(p, sizeof(share_data_hdr_t));
+
 	/* shareDataHeader */
 	hdr.share_ctrl_hdr.type = PDUTYPE_DATAPDU;
 	hdr.pdu_type2 = PDUTYPE2_UPDATE;
@@ -467,8 +472,10 @@ r2v_rdp_send_bitmap_update(r2v_rdp_t *r, r2v_packet_t *p,
 		goto fail;
 	}
 
+	r2v_packet_destory(p);
 	return 0;
 
 fail:
+	r2v_packet_destory(p);
 	return -1;
 }

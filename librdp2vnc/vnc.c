@@ -219,13 +219,70 @@ r2v_vnc_destory(r2v_vnc_t *v)
 }
 
 static int
+r2v_vnc_process_raw_encoding(r2v_vnc_t *v, uint16_t x, uint16_t y,
+							 uint16_t w, uint16_t h)
+{
+	uint16_t left, top, right, bottom, width, height;
+	uint32_t data_size = w * h * 4;
+
+	/* if data size is larger than vnc packet's buffer, 
+	 * init a new packet with a larger buffer */
+	if (data_size > v->packet->max_len) {
+		r2v_packet_destory(v->packet);
+		v->packet = r2v_packet_init(data_size);
+		if (v->packet == NULL) {
+			goto fail;
+		}
+	}
+	if (r2v_vnc_recv1(v, data_size) == -1) {
+		goto fail;
+	}
+	if (data_size > 2000) {
+		return 0;
+	}
+
+	left = x;
+	top = v->framebuffer_height - y - h;
+	right = x + w - 1;
+	bottom = v->framebuffer_height - y - 1;
+	width = w;
+	height = h;
+	if (r2v_rdp_send_bitmap_update(v->session->rdp, left, top, right, bottom,
+								   width, height, 32, data_size,
+								   v->packet->data) == -1) {
+		goto fail;
+	}
+
+	return 0;
+
+fail:
+	return -1;
+}
+
+static int
+r2v_vnc_process_copy_rect_encoding(r2v_vnc_t *v, uint16_t x, uint16_t y,
+								   uint16_t w, uint16_t h)
+{
+	uint16_t src_x, src_y;
+
+	if (r2v_vnc_recv1(v, 4) == -1) {
+		goto fail;
+	}
+	R2V_PACKET_READ_UINT16_BE(v->packet, src_x);
+	R2V_PACKET_READ_UINT16_BE(v->packet, src_y);
+	r2v_log_debug("copy rect from src_x: %d src_y: %d", src_x, src_y);
+
+	return 0;
+
+fail:
+	return -1;
+}
+
+static int
 r2v_vnc_process_framebuffer_update(r2v_vnc_t *v)
 {
 	uint16_t nrecs = 0, i = 0, x, y, w, h;
-	uint16_t left, top, right, bottom, width, height;
 	int32_t encoding_type;
-	uint32_t data_size;
-	r2v_packet_t *p = NULL;
 
 	if (r2v_vnc_recv1(v, 3) == -1) {
 		goto fail;
@@ -248,41 +305,17 @@ r2v_vnc_process_framebuffer_update(r2v_vnc_t *v)
 
 		switch (encoding_type) {
 		case RFB_ENCODING_RAW:
-			data_size = w * h * 4;
-			/* if data size is larger than vnc packet's buffer, 
-			 * init a new packet with a larger buffer */
-			if (data_size > v->packet->max_len) {
-				r2v_packet_destory(v->packet);
-				v->packet = r2v_packet_init(data_size);
-				if (v->packet == NULL) {
-					goto fail;
-				}
-			}
-			if (r2v_vnc_recv1(v, data_size) == -1) {
+			if (r2v_vnc_process_raw_encoding(v, x, y, w, h) == -1) {
 				goto fail;
 			}
-			if (data_size > 1000) {
-				continue;
-			}
-
-			/* init RDP bitmap update packet */
-			p = r2v_packet_init(data_size + 100);
-			if (p == NULL) {
+			break;
+		case RFB_ENCODING_COPYRECT:
+			if (r2v_vnc_process_copy_rect_encoding(v, x, y, w, h) == -1) {
 				goto fail;
 			}
-
-			left = x;
-			top = v->framebuffer_height - y - h;
-			right = x + w - 1;
-			bottom = v->framebuffer_height - y - 1;
-			width = w;
-			height = h;
-			if (r2v_rdp_send_bitmap_update(v->session->rdp, p,
-										   left, top, right, bottom,
-										   width, height, 32, data_size,
-										   v->packet->data) == -1) {
-				goto fail;
-			}
+			break;
+		default:
+			r2v_log_warn("unknown encoding type: %d", encoding_type);
 			break;
 		}
 	}
@@ -316,9 +349,14 @@ r2v_vnc_process_data(r2v_vnc_t *v)
 		goto fail;
 	}
 	R2V_PACKET_READ_UINT8(v->packet, msg_type);
+	r2v_log_debug("reveive message type %d from vnc server", msg_type);
+
 	switch (msg_type) {
 	case RFB_FRAMEBUFFER_UPDATE:
-		return r2v_vnc_process_framebuffer_update(v);
+		if (r2v_vnc_process_framebuffer_update(v) == -1) {
+			goto fail;
+		}
+		break;
 	default:
 		goto fail;
 		break;
