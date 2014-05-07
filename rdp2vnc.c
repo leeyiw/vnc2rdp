@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "log.h"
+#include "librdp2vnc/r2v_log.h"
 #include "rdp.h"
 #include "session.h"
 #include "vnc.h"

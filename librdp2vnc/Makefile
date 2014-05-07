@@ -3,7 +3,8 @@ CC = gcc
 CFLAGS = -c -Wall -fPIC
 DEBUG_FLAGS = -g
 RELEASE_FLAGS = -O2
-OBJS = session.o vnc.o rdp.o sec.o mcs.o x224.o tpkt.o packet.o capabilities.o
+OBJS = session.o vnc.o rdp.o sec.o mcs.o x224.o tpkt.o packet.o capabilities.o \
+	r2v_log.o
 LDFLAGS = -shared
 
 .PHONY: debug release all clean
@@ -37,6 +38,8 @@ packet.o: packet.c packet.h
 	$(CC) $(CFLAGS) $(INCLUDE) packet.c
 capabilities.o: capabilities.c capabilities.h
 	$(CC) $(CFLAGS) $(INCLUDE) capabilities.c
+r2v_log.o: r2v_log.c r2v_log.h
+	$(CC) $(CFLAGS) $(INCLUDE) r2v_log.c
 
 clean:
 	-rm -rf $(TARGET) $(OBJS)

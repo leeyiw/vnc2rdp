@@ -5,7 +5,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "log.h"
+#include "r2v_log.h"
 
 static const char *r2v_log_level_str[5] = {
 	"DEBUG", "INFO", "WARN", "ERROR", "FATAL"

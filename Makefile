@@ -5,7 +5,7 @@ CC = gcc
 CFLAGS = -c -Wall
 DEBUG_FLAGS = -g
 RELEASE_FLAGS = -O2
-OBJS = rdp2vnc.o log.o
+OBJS = rdp2vnc.o
 INCLUDE = -I$(LIBRDP2VNC_DIR)
 LDFLAGS = -L$(LIBRDP2VNC_DIR) -lrdp2vnc
 
