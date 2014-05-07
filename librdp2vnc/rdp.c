@@ -479,3 +479,9 @@ fail:
 	r2v_packet_destory(p);
 	return -1;
 }
+
+int
+r2v_rdp_process_data(r2v_rdp_t *r)
+{
+	return 0;
+}

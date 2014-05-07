@@ -281,17 +281,17 @@ fail:
 static int
 r2v_vnc_process_framebuffer_update(r2v_vnc_t *v)
 {
-	uint16_t nrecs = 0, i = 0, x, y, w, h;
+	uint16_t nrects = 0, i = 0, x, y, w, h;
 	int32_t encoding_type;
 
 	if (r2v_vnc_recv1(v, 3) == -1) {
 		goto fail;
 	}
 	R2V_PACKET_SEEK_UINT8(v->packet);
-	R2V_PACKET_READ_UINT16_BE(v->packet, nrecs);
-	r2v_log_debug("receive framebuffer update with %d recs", nrecs);
+	R2V_PACKET_READ_UINT16_BE(v->packet, nrects);
+	r2v_log_debug("receive framebuffer update with %d rects", nrects);
 
-	for (i = 0; i < nrecs; i++) {
+	for (i = 0; i < nrects; i++) {
 		if (r2v_vnc_recv1(v, 12) == -1) {
 			goto fail;
 		}
@@ -300,8 +300,8 @@ r2v_vnc_process_framebuffer_update(r2v_vnc_t *v)
 		R2V_PACKET_READ_UINT16_BE(v->packet, w);
 		R2V_PACKET_READ_UINT16_BE(v->packet, h);
 		R2V_PACKET_READ_UINT32_BE(v->packet, encoding_type);
-		r2v_log_debug("rec %d of %d: pos: %d,%d size: %dx%d encoding: %d",
-					  i + 1, nrecs, x, y, w, h, encoding_type);
+		r2v_log_debug("rect %d of %d: pos: %d,%d size: %dx%d encoding: %d",
+					  i + 1, nrects, x, y, w, h, encoding_type);
 
 		switch (encoding_type) {
 		case RFB_ENCODING_RAW:

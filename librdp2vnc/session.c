@@ -46,7 +46,7 @@ r2v_session_destory(r2v_session_t *s)
 void
 r2v_session_transmit(r2v_session_t *s)
 {
-	int i, nfds;
+	int i, nfds, rdp_fd, vnc_fd;
 	struct epoll_event ev, events[MAX_EVENTS];
 
 	s->epoll_fd = epoll_create(2);
@@ -54,11 +54,20 @@ r2v_session_transmit(r2v_session_t *s)
 		goto fail;
 	}
 
+	rdp_fd = s->rdp->sec->mcs->x224->tpkt->fd;
+	vnc_fd = s->vnc->fd;
+
 	memset(&ev, 0, sizeof(ev));
 	ev.events = EPOLLIN;
-	ev.data.fd = s->vnc->fd;
+	ev.data.fd = rdp_fd;
+	if (epoll_ctl(s->epoll_fd, EPOLL_CTL_ADD, rdp_fd, &ev) == -1) {
+		goto fail;
+	}
 
-	if (epoll_ctl(s->epoll_fd, EPOLL_CTL_ADD, s->vnc->fd, &ev) == -1) {
+	memset(&ev, 0, sizeof(ev));
+	ev.events = EPOLLIN;
+	ev.data.fd = vnc_fd;
+	if (epoll_ctl(s->epoll_fd, EPOLL_CTL_ADD, vnc_fd, &ev) == -1) {
 		goto fail;
 	}
 
@@ -68,7 +77,11 @@ r2v_session_transmit(r2v_session_t *s)
 			goto fail;
 		}
 		for (i = 0; i < nfds; i++) {
-			if (events[i].data.fd == s->vnc->fd) {
+			if (events[i].data.fd == rdp_fd) {
+				if (r2v_rdp_process_data(s->rdp) == -1) {
+					goto fail;
+				}
+			} else if (events[i].data.fd == vnc_fd) {
 				if (r2v_vnc_process_data(s->vnc) == -1) {
 					goto fail;
 				}

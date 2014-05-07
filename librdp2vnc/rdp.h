@@ -102,5 +102,6 @@ extern int r2v_rdp_send_bitmap_update(r2v_rdp_t *r, uint16_t left, uint16_t top,
 									  uint16_t width, uint16_t height,
 									  uint16_t bpp, uint16_t bitmap_length,
 									  uint8_t *data);
+extern int r2v_rdp_process_data(r2v_rdp_t *r);
 
 #endif
