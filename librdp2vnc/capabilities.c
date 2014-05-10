@@ -37,7 +37,7 @@ r2v_cap_write_bitmap_cap(r2v_packet_t *p)
 	/* capabilitySetType */
 	R2V_PACKET_WRITE_UINT16_LE(p, CAPSTYPE_BITMAP);
 	/* lengthCapability */
-	R2V_PACKET_WRITE_UINT16_LE(p, 28);
+	R2V_PACKET_WRITE_UINT16_LE(p, 29);
 	/* preferredBitsPerPixel */
 	R2V_PACKET_WRITE_UINT16_LE(p, 32);
 	/* receive1BitPerPixel */
@@ -66,9 +66,33 @@ r2v_cap_write_bitmap_cap(r2v_packet_t *p)
 	R2V_PACKET_WRITE_UINT16_LE(p, 0);
 }
 
+static void
+r2v_cap_write_input_cap(r2v_packet_t *p)
+{
+	/* capabilitySetType */
+	R2V_PACKET_WRITE_UINT16_LE(p, CAPSTYPE_INPUT);
+	/* lengthCapability */
+	R2V_PACKET_WRITE_UINT16_LE(p, 88);
+	/* inputFlags */
+	R2V_PACKET_WRITE_UINT16_LE(p, INPUT_FLAG_SCANCODES);
+	/* pad2octetsA */
+	R2V_PACKET_WRITE_UINT16_LE(p, 0);
+	/* keyboardLayout */
+	R2V_PACKET_WRITE_UINT32_LE(p, 0);
+	/* keyboardType */
+	R2V_PACKET_WRITE_UINT32_LE(p, 0);
+	/* keyboardSubType */
+	R2V_PACKET_WRITE_UINT32_LE(p, 0);
+	/* keyboardFunctionKey */
+	R2V_PACKET_WRITE_UINT32_LE(p, 0);
+	/* imeFileName */
+	R2V_PACKET_SEEK(p, 64);
+}
+
 r2v_cap_write_func r2v_cap_write_func_list[] = {
 	r2v_cap_write_general_cap,
-	r2v_cap_write_bitmap_cap
+	r2v_cap_write_bitmap_cap,
+	r2v_cap_write_input_cap
 };
 
 uint16_t

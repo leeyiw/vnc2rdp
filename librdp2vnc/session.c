@@ -78,11 +78,11 @@ r2v_session_transmit(r2v_session_t *s)
 		}
 		for (i = 0; i < nfds; i++) {
 			if (events[i].data.fd == rdp_fd) {
-				if (r2v_rdp_process_data(s->rdp) == -1) {
+				if (r2v_rdp_process(s->rdp) == -1) {
 					goto fail;
 				}
 			} else if (events[i].data.fd == vnc_fd) {
-				if (r2v_vnc_process_data(s->vnc) == -1) {
+				if (r2v_vnc_process(s->vnc) == -1) {
 					goto fail;
 				}
 			}

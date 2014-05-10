@@ -55,6 +55,16 @@
 #define OSMINORTYPE_NATIVE_XSERVER			0x0007
 #define OSMINORTYPE_PSEUDO_XSERVER			0x0008
 
+/* Input Capability Set - inputFlags */
+#define INPUT_FLAG_SCANCODES				0x0001
+#define INPUT_FLAG_MOUSEX					0x0004
+#define INPUT_FLAG_FASTPATH_INPUT			0x0008
+#define INPUT_FLAG_UNICODE					0x0010
+#define INPUT_FLAG_FASTPATH_INPUT2			0x0020
+#define INPUT_FLAG_UNUSED1					0x0040
+#define INPUT_FLAG_UNUSED2					0x0080
+#define TS_INPUT_FLAG_MOUSE_HWHEEL			0x0100
+
 typedef void (*r2v_cap_write_func)(r2v_packet_t *p);
 
 extern uint16_t r2v_cap_get_write_count();

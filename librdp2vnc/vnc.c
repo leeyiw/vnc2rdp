@@ -341,7 +341,7 @@ fail:
 }
 
 int
-r2v_vnc_process_data(r2v_vnc_t *v)
+r2v_vnc_process(r2v_vnc_t *v)
 {
 	uint8_t msg_type;
 

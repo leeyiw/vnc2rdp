@@ -3,6 +3,7 @@
 
 #include "capabilities.h"
 #include "license.h"
+#include "log.h"
 #include "rdp.h"
 
 static int
@@ -63,6 +64,7 @@ r2v_rdp_send_demand_active(r2v_rdp_t *r, r2v_packet_t *p)
 	R2V_PACKET_WRITE_UINT16_LE(p, 4);
 	/* lengthCombinedCapabilities: mark this place */
 	length_combined_capabilities = (uint16_t *)p->current;
+	R2V_PACKET_WRITE_UINT16_LE(p, 0);
 	/* sourceDescriptor */
 	R2V_PACKET_WRITE_N(p, "RDP", 4);
 	/* numberCapabilities */
@@ -332,6 +334,11 @@ r2v_rdp_init(int client_fd)
 	}
 	memset(r, 0, sizeof(r2v_rdp_t));
 
+	r->packet = r2v_packet_init(65535);
+	if (r->packet == NULL) {
+		goto fail;
+	}
+
 	r->sec = r2v_sec_init(client_fd);
 	if (r->sec == NULL) {
 		goto fail;
@@ -353,6 +360,9 @@ r2v_rdp_destory(r2v_rdp_t *r)
 {
 	if (r == NULL) {
 		return;
+	}
+	if (r->packet != NULL) {
+		r2v_packet_destory(r->packet);
 	}
 	if (r->sec != NULL) {
 		r2v_sec_destory(r->sec);
@@ -480,8 +490,54 @@ fail:
 	return -1;
 }
 
-int
-r2v_rdp_process_data(r2v_rdp_t *r)
+static int
+r2v_rdp_process_data_input(r2v_rdp_t *r, r2v_packet_t *p)
 {
+	uint16_t num_events;
+
+	R2V_PACKET_READ_UINT16_LE(p, num_events);
+	r2v_log_debug("receive %d input events", num_events);
+
 	return 0;
+}
+
+static int
+r2v_rdp_process_data(r2v_rdp_t *r, r2v_packet_t *p, const share_data_hdr_t *hdr)
+{
+	switch (hdr->pdu_type2) {
+	case PDUTYPE2_INPUT:
+		if (r2v_rdp_process_data_input(r, p) == -1) {
+			goto fail;
+		}
+		break;
+	}
+
+	return 0;
+
+fail:
+	return -1;
+}
+
+int
+r2v_rdp_process(r2v_rdp_t *r)
+{
+	share_data_hdr_t hdr;
+
+	if (r2v_rdp_recv(r, r->packet, &hdr) == -1) {
+		goto fail;
+	}
+	switch (hdr.share_ctrl_hdr.type) {
+	case PDUTYPE_DEMANDACTIVEPDU:
+		break;
+	case PDUTYPE_DATAPDU:
+		if (r2v_rdp_process_data(r, r->packet, &hdr) == -1) {
+			goto fail;
+		}
+		break;
+	}
+
+	return 0;
+
+fail:
+	return -1;
 }

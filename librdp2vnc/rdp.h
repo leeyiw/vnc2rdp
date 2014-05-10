@@ -69,7 +69,9 @@
 #define NO_BITMAP_COMPRESSION_HDR				0x0400
 
 typedef struct _r2v_rdp_t {
+	r2v_packet_t *packet;
 	r2v_sec_t *sec;
+
 	r2v_session_t *session;
 } r2v_rdp_t;
 
@@ -102,6 +104,6 @@ extern int r2v_rdp_send_bitmap_update(r2v_rdp_t *r, uint16_t left, uint16_t top,
 									  uint16_t width, uint16_t height,
 									  uint16_t bpp, uint16_t bitmap_length,
 									  uint8_t *data);
-extern int r2v_rdp_process_data(r2v_rdp_t *r);
+extern int r2v_rdp_process(r2v_rdp_t *r);
 
 #endif
