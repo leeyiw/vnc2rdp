@@ -77,6 +77,7 @@
 
 #define R2V_PACKET_SEEK(p, n)			(p)->current += (n)
 #define R2V_PACKET_SEEK_UINT8(p)		R2V_PACKET_SEEK(p, sizeof(uint8_t))
+#define R2V_PACKET_SEEK_UINT16(p)		R2V_PACKET_SEEK(p, sizeof(uint16_t))
 
 #define R2V_PACKET_END(p)				(p)->end = (p)->current
 #define R2V_PACKET_LEN(p)				((p)->end - (p)->data)

@@ -493,10 +493,45 @@ fail:
 static int
 r2v_rdp_process_data_input(r2v_rdp_t *r, r2v_packet_t *p)
 {
-	uint16_t num_events;
+	uint16_t i, num_events, message_type;
+	uint32_t event_time;
+
+	uint16_t pointer_flags, x_pos, y_pos;
 
 	R2V_PACKET_READ_UINT16_LE(p, num_events);
+	R2V_PACKET_SEEK_UINT16(p);
 	r2v_log_debug("receive %d input events", num_events);
+
+	for (i = 0; i < num_events; i++) {
+		R2V_PACKET_READ_UINT32_LE(p, event_time);
+		R2V_PACKET_READ_UINT16_LE(p, message_type);
+		r2v_log_debug("input events %d of %d, message type: 0x%x", i + 1,
+					  num_events, message_type);
+		switch (message_type) {
+		case INPUT_EVENT_SYNC:
+			R2V_PACKET_SEEK(p, 6);
+			break;
+		case INPUT_EVENT_UNUSED:
+			R2V_PACKET_SEEK(p, 6);
+			break;
+		case INPUT_EVENT_SCANCODE:
+			R2V_PACKET_SEEK(p, 6);
+			break;
+		case INPUT_EVENT_UNICODE:
+			R2V_PACKET_SEEK(p, 6);
+			break;
+		case INPUT_EVENT_MOUSE:
+			R2V_PACKET_READ_UINT16_LE(p, pointer_flags);
+			R2V_PACKET_READ_UINT16_LE(p, x_pos);
+			R2V_PACKET_READ_UINT16_LE(p, y_pos);
+			break;
+		case INPUT_EVENT_MOUSEX:
+			R2V_PACKET_SEEK(p, 6);
+			break;
+		default:
+			r2v_log_warn("unknown input event message type 0x%x", message_type);
+		}
+	}
 
 	return 0;
 }
