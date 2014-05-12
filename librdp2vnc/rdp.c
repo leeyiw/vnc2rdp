@@ -5,6 +5,7 @@
 #include "license.h"
 #include "log.h"
 #include "rdp.h"
+#include "vnc.h"
 
 static int
 r2v_rdp_recv_client_info(r2v_rdp_t *r, r2v_packet_t *p)
@@ -524,6 +525,11 @@ r2v_rdp_process_data_input(r2v_rdp_t *r, r2v_packet_t *p)
 			R2V_PACKET_READ_UINT16_LE(p, pointer_flags);
 			R2V_PACKET_READ_UINT16_LE(p, x_pos);
 			R2V_PACKET_READ_UINT16_LE(p, y_pos);
+			y_pos = r->session->vnc->framebuffer_height - y_pos;
+			if (r2v_vnc_send_pointer_event(r->session->vnc, 0, x_pos, y_pos)
+				== -1) {
+				goto fail;
+			}
 			break;
 		case INPUT_EVENT_MOUSEX:
 			R2V_PACKET_SEEK(p, 6);
@@ -534,6 +540,9 @@ r2v_rdp_process_data_input(r2v_rdp_t *r, r2v_packet_t *p)
 	}
 
 	return 0;
+
+fail:
+	return -1;
 }
 
 static int

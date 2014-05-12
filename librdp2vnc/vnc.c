@@ -237,7 +237,7 @@ r2v_vnc_process_raw_encoding(r2v_vnc_t *v, uint16_t x, uint16_t y,
 	if (r2v_vnc_recv1(v, data_size) == -1) {
 		goto fail;
 	}
-	if (data_size > 2000) {
+	if (data_size > 4000) {
 		return 0;
 	}
 
@@ -349,7 +349,6 @@ r2v_vnc_process(r2v_vnc_t *v)
 		goto fail;
 	}
 	R2V_PACKET_READ_UINT8(v->packet, msg_type);
-	r2v_log_debug("reveive message type %d from vnc server", msg_type);
 
 	switch (msg_type) {
 	case RFB_FRAMEBUFFER_UPDATE:
@@ -358,6 +357,8 @@ r2v_vnc_process(r2v_vnc_t *v)
 		}
 		break;
 	default:
+		r2v_log_debug("reveive unknown message type %d from vnc server",
+					  msg_type);
 		goto fail;
 		break;
 	}
@@ -366,4 +367,22 @@ r2v_vnc_process(r2v_vnc_t *v)
 
 fail:
 	return -1;
+}
+
+int
+r2v_vnc_send_pointer_event(r2v_vnc_t *v, uint8_t btn_mask,
+						   uint16_t x_pos, uint16_t y_pos)
+{
+	/* send PointerEvent message */
+	r2v_packet_reset(v->packet);
+	/* message-type */
+	R2V_PACKET_WRITE_UINT8(v->packet, RFB_POINTER_EVENT);
+	/* button-mask */
+	R2V_PACKET_WRITE_UINT8(v->packet, btn_mask);
+	/* x-position */
+	R2V_PACKET_WRITE_UINT16_BE(v->packet, x_pos);
+	R2V_PACKET_WRITE_UINT16_BE(v->packet, y_pos);
+	R2V_PACKET_END(v->packet);
+
+	return r2v_vnc_send(v);
 }
