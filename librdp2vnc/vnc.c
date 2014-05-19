@@ -222,8 +222,10 @@ static int
 r2v_vnc_process_raw_encoding(r2v_vnc_t *v, uint16_t x, uint16_t y,
 							 uint16_t w, uint16_t h)
 {
-	uint16_t left, top, right, bottom, width, height;
+	uint16_t left, top, right, bottom, width, height, i;
 	uint32_t data_size = w * h * 4;
+	uint32_t line_size = w * 4;
+	uint8_t buffer[line_size];
 
 	/* if data size is larger than vnc packet's buffer, 
 	 * init a new packet with a larger buffer */
@@ -241,10 +243,18 @@ r2v_vnc_process_raw_encoding(r2v_vnc_t *v, uint16_t x, uint16_t y,
 		return 0;
 	}
 
+	for (i = 0; i < h / 2; i++) {
+		memcpy(buffer, v->packet->data + i * line_size, line_size);
+		memcpy(v->packet->data + i * line_size,
+			   v->packet->data + (h - i - 1) * line_size,
+			   line_size);
+		memcpy(v->packet->data + (h - i - 1) * line_size, buffer, line_size);
+	}
+
 	left = x;
-	top = v->framebuffer_height - y - h;
+	top = y;
 	right = x + w - 1;
-	bottom = v->framebuffer_height - y - 1;
+	bottom = y + h - 1;
 	width = w;
 	height = h;
 	if (r2v_rdp_send_bitmap_update(v->session->rdp, left, top, right, bottom,
