@@ -494,6 +494,7 @@ fail:
 static int
 r2v_rdp_process_data_input(r2v_rdp_t *r, r2v_packet_t *p)
 {
+	uint8_t button_mask;
 	uint16_t i, num_events, message_type;
 	uint32_t event_time;
 
@@ -525,8 +526,18 @@ r2v_rdp_process_data_input(r2v_rdp_t *r, r2v_packet_t *p)
 			R2V_PACKET_READ_UINT16_LE(p, pointer_flags);
 			R2V_PACKET_READ_UINT16_LE(p, x_pos);
 			R2V_PACKET_READ_UINT16_LE(p, y_pos);
-			if (r2v_vnc_send_pointer_event(r->session->vnc, 0, x_pos, y_pos)
-				== -1) {
+			button_mask = 0;
+			if (pointer_flags & PTRFLAGS_DOWN) {
+				if (pointer_flags & PTRFLAGS_BUTTON1) {
+					button_mask = RFB_POINTER_BUTTON_LEFT;
+				} else if (pointer_flags & PTRFLAGS_BUTTON2) {
+					button_mask = RFB_POINTER_BUTTON_RIGHT;
+				} else if (pointer_flags & PTRFLAGS_BUTTON3) {
+					button_mask = RFB_POINTER_BUTTON_MIDDLE;
+				}
+			}
+			if (r2v_vnc_send_pointer_event(r->session->vnc, button_mask, x_pos,
+										   y_pos) == -1) {
 				goto fail;
 			}
 			break;

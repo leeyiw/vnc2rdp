@@ -17,6 +17,11 @@
 #define RFB_POINTER_EVENT				5
 #define RFB_CLIENT_CUT_TEXT				6
 
+/* PointerEvent */
+#define RFB_POINTER_BUTTON_LEFT			1
+#define RFB_POINTER_BUTTON_MIDDLE		2
+#define RFB_POINTER_BUTTON_RIGHT		4
+
 /* server to client messages */
 #define RFB_FRAMEBUFFER_UPDATE			0
 #define RFB_SET_COLOUR_MAP_ENTRIES		1
