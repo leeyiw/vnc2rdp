@@ -239,9 +239,6 @@ r2v_vnc_process_raw_encoding(r2v_vnc_t *v, uint16_t x, uint16_t y,
 	if (r2v_vnc_recv1(v, data_size) == -1) {
 		goto fail;
 	}
-	if (data_size > 4000) {
-		return 0;
-	}
 
 	for (i = 0; i < h / 2; i++) {
 		memcpy(buffer, v->packet->data + i * line_size, line_size);
@@ -251,6 +248,7 @@ r2v_vnc_process_raw_encoding(r2v_vnc_t *v, uint16_t x, uint16_t y,
 		memcpy(v->packet->data + (h - i - 1) * line_size, buffer, line_size);
 	}
 
+/*
 	left = x;
 	top = y;
 	right = x + w - 1;
@@ -261,6 +259,21 @@ r2v_vnc_process_raw_encoding(r2v_vnc_t *v, uint16_t x, uint16_t y,
 								   width, height, 32, data_size,
 								   v->packet->data) == -1) {
 		goto fail;
+	}
+*/
+
+	for (i = 0; i < h; i++) {
+		left = x;
+		top = y + h - 1 - i;
+		right = x + w - 1;
+		bottom = y + h - 1 - i;
+		width = w;
+		height = 1;
+		if (r2v_rdp_send_bitmap_update(v->session->rdp, left, top, right, bottom,
+									   width, height, 32, line_size,
+									   v->packet->data + i * line_size) == -1) {
+			goto fail;
+		}
 	}
 
 	return 0;
