@@ -144,9 +144,9 @@ r2v_vnc_build_conn(r2v_vnc_t *v)
 	r2v_packet_reset(v->packet);
 	R2V_PACKET_WRITE_UINT8(v->packet, RFB_SET_ENCODINGS);
 	R2V_PACKET_WRITE_UINT8(v->packet, 0);
-	R2V_PACKET_WRITE_UINT16_BE(v->packet, 3);
+	R2V_PACKET_WRITE_UINT16_BE(v->packet, 2);
 	R2V_PACKET_WRITE_SINT32_BE(v->packet, RFB_ENCODING_RAW);
-	R2V_PACKET_WRITE_SINT32_BE(v->packet, RFB_ENCODING_COPYRECT);
+	//R2V_PACKET_WRITE_SINT32_BE(v->packet, RFB_ENCODING_COPYRECT);
 	//R2V_PACKET_WRITE_SINT32_BE(v->packet, RFB_ENCODING_CURSOR);
 	R2V_PACKET_WRITE_SINT32_BE(v->packet, RFB_ENCODING_DESKTOP_SIZE);
 	R2V_PACKET_END(v->packet);
@@ -312,7 +312,7 @@ r2v_vnc_process_framebuffer_update(r2v_vnc_t *v)
 	}
 	R2V_PACKET_SEEK_UINT8(v->packet);
 	R2V_PACKET_READ_UINT16_BE(v->packet, nrects);
-	r2v_log_debug("receive framebuffer update with %d rects", nrects);
+	//r2v_log_debug("receive framebuffer update with %d rects", nrects);
 
 	for (i = 0; i < nrects; i++) {
 		if (r2v_vnc_recv1(v, 12) == -1) {
@@ -323,8 +323,8 @@ r2v_vnc_process_framebuffer_update(r2v_vnc_t *v)
 		R2V_PACKET_READ_UINT16_BE(v->packet, w);
 		R2V_PACKET_READ_UINT16_BE(v->packet, h);
 		R2V_PACKET_READ_UINT32_BE(v->packet, encoding_type);
-		r2v_log_debug("rect %d of %d: pos: %d,%d size: %dx%d encoding: %d",
-					  i + 1, nrects, x, y, w, h, encoding_type);
+		//r2v_log_debug("rect %d of %d: pos: %d,%d size: %dx%d encoding: %d",
+		//			  i + 1, nrects, x, y, w, h, encoding_type);
 
 		switch (encoding_type) {
 		case RFB_ENCODING_RAW:
