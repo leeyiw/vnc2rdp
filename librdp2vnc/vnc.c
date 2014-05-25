@@ -363,6 +363,26 @@ fail:
 	return -1;
 }
 
+static int
+r2v_vnc_process_server_cut_text(r2v_vnc_t *v)
+{
+	uint32_t length;
+
+	if (r2v_vnc_recv1(v, 7) == -1) {
+		goto fail;
+	}
+	R2V_PACKET_SEEK(v->packet, 3);
+	R2V_PACKET_READ_UINT32_BE(v->packet, length);
+	if (r2v_vnc_recv1(v, length) == -1) {
+		goto fail;
+	}
+
+	return 0;
+
+fail:
+	return -1;
+}
+
 int
 r2v_vnc_process(r2v_vnc_t *v)
 {
@@ -376,6 +396,11 @@ r2v_vnc_process(r2v_vnc_t *v)
 	switch (msg_type) {
 	case RFB_FRAMEBUFFER_UPDATE:
 		if (r2v_vnc_process_framebuffer_update(v) == -1) {
+			goto fail;
+		}
+		break;
+	case RFB_SERVER_CUT_TEXT:
+		if (r2v_vnc_process_server_cut_text(v) == -1) {
 			goto fail;
 		}
 		break;
