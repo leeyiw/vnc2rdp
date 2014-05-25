@@ -5,34 +5,53 @@
 static int
 r2v_input_process_mouse_event(r2v_rdp_t *r, r2v_packet_t *p)
 {
-	uint8_t button_mask;
-	uint16_t pointer_flags, x_pos, y_pos;
+	uint8_t button_mask = 0;
 	static uint8_t button1_clicked, button2_clicked, button3_clicked;
+	uint16_t pointer_flags;
+	static uint16_t x_pos, y_pos;
 
 	R2V_PACKET_READ_UINT16_LE(p, pointer_flags);
-	R2V_PACKET_READ_UINT16_LE(p, x_pos);
-	R2V_PACKET_READ_UINT16_LE(p, y_pos);
-
-	button_mask = 0;
-	if (pointer_flags & PTRFLAGS_BUTTON1) {
-		button1_clicked = pointer_flags & PTRFLAGS_DOWN ? 1 : 0;
-	} else if (pointer_flags & PTRFLAGS_BUTTON2) {
-		button2_clicked = pointer_flags & PTRFLAGS_DOWN ? 1 : 0;
-	} else if (pointer_flags & PTRFLAGS_BUTTON3) {
-		button3_clicked = pointer_flags & PTRFLAGS_DOWN ? 1 : 0;
+	if (pointer_flags & PTRFLAGS_MOVE) {
+		R2V_PACKET_READ_UINT16_LE(p, x_pos);
+		R2V_PACKET_READ_UINT16_LE(p, y_pos);
+	} else {
+		R2V_PACKET_SEEK(p, 4);
 	}
-	if (button1_clicked) {
-		button_mask |= RFB_POINTER_BUTTON_LEFT;
-	}
-	if (button2_clicked) {
-		button_mask |= RFB_POINTER_BUTTON_RIGHT;
-	}
-	if (button3_clicked) {
-		button_mask |= RFB_POINTER_BUTTON_MIDDLE;
-	}
-	if (r2v_vnc_send_pointer_event(r->session->vnc, button_mask, x_pos,
-								   y_pos) == -1) {
-		goto fail;
+	if (pointer_flags & PTRFLAGS_WHEEL) {
+		if (pointer_flags & PTRFLAGS_WHEEL_NEGATIVE) {
+			button_mask = RFB_POINTER_WHEEL_DOWNWARDS;
+		} else {
+			button_mask = RFB_POINTER_WHEEL_UPWARDS;
+		}
+		if (r2v_vnc_send_pointer_event(r->session->vnc, button_mask, x_pos,
+									   y_pos) == -1) {
+			goto fail;
+		}
+		if (r2v_vnc_send_pointer_event(r->session->vnc, 0, x_pos,
+									   y_pos) == -1) {
+			goto fail;
+		}
+	} else {
+		if (pointer_flags & PTRFLAGS_BUTTON1) {
+			button1_clicked = pointer_flags & PTRFLAGS_DOWN ? 1 : 0;
+		} else if (pointer_flags & PTRFLAGS_BUTTON2) {
+			button2_clicked = pointer_flags & PTRFLAGS_DOWN ? 1 : 0;
+		} else if (pointer_flags & PTRFLAGS_BUTTON3) {
+			button3_clicked = pointer_flags & PTRFLAGS_DOWN ? 1 : 0;
+		}
+		if (button1_clicked) {
+			button_mask |= RFB_POINTER_BUTTON_LEFT;
+		}
+		if (button2_clicked) {
+			button_mask |= RFB_POINTER_BUTTON_RIGHT;
+		}
+		if (button3_clicked) {
+			button_mask |= RFB_POINTER_BUTTON_MIDDLE;
+		}
+		if (r2v_vnc_send_pointer_event(r->session->vnc, button_mask, x_pos,
+									   y_pos) == -1) {
+			goto fail;
+		}
 	}
 
 	return 0;
