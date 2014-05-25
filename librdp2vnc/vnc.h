@@ -52,6 +52,8 @@ typedef struct _r2v_vnc_t {
 extern r2v_vnc_t *r2v_vnc_init();
 extern void r2v_vnc_destory(r2v_vnc_t *v);
 extern int r2v_vnc_process(r2v_vnc_t *v);
+extern int r2v_vnc_send_key_event(r2v_vnc_t *v, uint8_t down_flag,
+								  uint32_t key);
 extern int r2v_vnc_send_pointer_event(r2v_vnc_t *v, uint8_t btn_mask,
 									  uint16_t x_pos, uint16_t y_pos);
 

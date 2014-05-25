@@ -145,10 +145,10 @@ r2v_vnc_build_conn(r2v_vnc_t *v)
 	R2V_PACKET_WRITE_UINT8(v->packet, RFB_SET_ENCODINGS);
 	R2V_PACKET_WRITE_UINT8(v->packet, 0);
 	R2V_PACKET_WRITE_UINT16_BE(v->packet, 2);
-	R2V_PACKET_WRITE_SINT32_BE(v->packet, RFB_ENCODING_RAW);
-	//R2V_PACKET_WRITE_SINT32_BE(v->packet, RFB_ENCODING_COPYRECT);
-	//R2V_PACKET_WRITE_SINT32_BE(v->packet, RFB_ENCODING_CURSOR);
-	R2V_PACKET_WRITE_SINT32_BE(v->packet, RFB_ENCODING_DESKTOP_SIZE);
+	R2V_PACKET_WRITE_UINT32_BE(v->packet, RFB_ENCODING_RAW);
+	//R2V_PACKET_WRITE_UINT32_BE(v->packet, RFB_ENCODING_COPYRECT);
+	//R2V_PACKET_WRITE_UINT32_BE(v->packet, RFB_ENCODING_CURSOR);
+	R2V_PACKET_WRITE_UINT32_BE(v->packet, RFB_ENCODING_DESKTOP_SIZE);
 	R2V_PACKET_END(v->packet);
 	if (r2v_vnc_send(v) == -1) {
 		goto fail;
@@ -415,6 +415,24 @@ r2v_vnc_process(r2v_vnc_t *v)
 
 fail:
 	return -1;
+}
+
+int
+r2v_vnc_send_key_event(r2v_vnc_t *v, uint8_t down_flag, uint32_t key)
+{
+	/* send KeyEvent message */
+	r2v_packet_reset(v->packet);
+	/* message-type */
+	R2V_PACKET_WRITE_UINT8(v->packet, RFB_KEY_EVENT);
+	/* down-flag */
+	R2V_PACKET_WRITE_UINT8(v->packet, down_flag);
+	/* padding */
+	R2V_PACKET_WRITE_UINT16_BE(v->packet, 0);
+	/* key */
+	R2V_PACKET_WRITE_UINT32_BE(v->packet, key);
+	R2V_PACKET_END(v->packet);
+
+	return r2v_vnc_send(v);
 }
 
 int

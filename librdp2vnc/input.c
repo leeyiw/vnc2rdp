@@ -3,6 +3,31 @@
 #include "vnc.h"
 
 static int
+r2v_input_process_keyboard_event(r2v_rdp_t *r, r2v_packet_t *p)
+{
+	uint16_t keyboard_flags, key_code;
+
+	R2V_PACKET_READ_UINT16_LE(p, keyboard_flags);
+	R2V_PACKET_READ_UINT16_LE(p, key_code);
+	R2V_PACKET_SEEK_UINT16(p);
+
+	r2v_log_debug("keyboard_flags: 0x%x, key_code: 0x%x", keyboard_flags,
+				  key_code);
+
+	if (r2v_vnc_send_key_event(r->session->vnc, 1, 0x0051) == -1) {
+		goto fail;
+	}
+	if (r2v_vnc_send_key_event(r->session->vnc, 0, 0x0051) == -1) {
+		goto fail;
+	}
+
+	return 0;
+
+fail:
+	return -1;
+}
+
+static int
 r2v_input_process_mouse_event(r2v_rdp_t *r, r2v_packet_t *p)
 {
 	uint8_t button_mask = 0;
@@ -68,13 +93,10 @@ r2v_input_process(r2v_rdp_t *r, r2v_packet_t *p)
 
 	R2V_PACKET_READ_UINT16_LE(p, num_events);
 	R2V_PACKET_SEEK_UINT16(p);
-	r2v_log_debug("receive %d input events", num_events);
 
 	for (i = 0; i < num_events; i++) {
 		R2V_PACKET_READ_UINT32_LE(p, event_time);
 		R2V_PACKET_READ_UINT16_LE(p, message_type);
-		r2v_log_debug("input events %d of %d, message type: 0x%x", i + 1,
-					  num_events, message_type);
 		switch (message_type) {
 		case INPUT_EVENT_SYNC:
 			R2V_PACKET_SEEK(p, 6);
@@ -83,7 +105,9 @@ r2v_input_process(r2v_rdp_t *r, r2v_packet_t *p)
 			R2V_PACKET_SEEK(p, 6);
 			break;
 		case INPUT_EVENT_SCANCODE:
-			R2V_PACKET_SEEK(p, 6);
+			if (r2v_input_process_keyboard_event(r, p) == -1) {
+				goto fail;
+			}
 			break;
 		case INPUT_EVENT_UNICODE:
 			R2V_PACKET_SEEK(p, 6);

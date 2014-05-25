@@ -57,7 +57,7 @@
 		*((uint16_t *)((p)->current)) = (uint16_t)v; \
 		(p)->current += sizeof(uint16_t); \
 	} while (0)
-#define R2V_PACKET_WRITE_SINT32_BE(p, v) \
+#define R2V_PACKET_WRITE_UINT32_BE(p, v) \
 	do { \
 		*((p)->current++) = (int8_t)((v) >> 24); \
 		*((p)->current++) = (int8_t)((v) >> 16); \
