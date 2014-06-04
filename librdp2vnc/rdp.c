@@ -5,6 +5,7 @@
 #include "input.h"
 #include "license.h"
 #include "log.h"
+#include "orders.h"
 #include "rdp.h"
 #include "vnc.h"
 
@@ -480,6 +481,7 @@ r2v_rdp_send_bitmap_update(r2v_rdp_t *r, uint16_t left, uint16_t top,
 	R2V_PACKET_WRITE_UINT16_LE(p, bitmap_length);
 	/* bitmapDataStream */
 	R2V_PACKET_WRITE_N(p, bitmap_data, bitmap_length);
+
 	/* send packet */
 	R2V_PACKET_END(p);
 	if (r2v_rdp_send(r, p, &hdr) == -1) {
@@ -491,6 +493,62 @@ r2v_rdp_send_bitmap_update(r2v_rdp_t *r, uint16_t left, uint16_t top,
 
 fail:
 	r2v_packet_destory(p);
+	return -1;
+}
+
+int
+r2v_rdp_send_scrblt_order(r2v_rdp_t *r, uint16_t left, uint16_t top,
+						   uint16_t width, uint16_t height,
+						   uint16_t x_src, uint16_t y_src)
+{
+	share_data_hdr_t hdr;
+
+	r2v_rdp_init_packet(r->packet, sizeof(share_data_hdr_t));
+
+	/* shareDataHeader */
+	hdr.share_ctrl_hdr.type = PDUTYPE_DATAPDU;
+	hdr.pdu_type2 = PDUTYPE2_UPDATE;
+	/* updateType */
+	R2V_PACKET_WRITE_UINT16_LE(r->packet, UPDATETYPE_ORDERS);
+	/* pad2OctetsA */
+	R2V_PACKET_WRITE_UINT16_LE(r->packet, 0);
+	/* numberOrders */
+	R2V_PACKET_WRITE_UINT16_LE(r->packet, 1);
+	/* pad2OctetsB */
+	R2V_PACKET_WRITE_UINT16_LE(r->packet, 0);
+
+	/* orderData */
+
+	/* controlFlags */
+	R2V_PACKET_WRITE_UINT8(r->packet, TS_STANDARD|TS_TYPE_CHANGE);
+	/* orderType */
+	R2V_PACKET_WRITE_UINT8(r->packet, TS_ENC_SCRBLT_ORDER);
+	/* fieldFlags */
+	R2V_PACKET_WRITE_UINT8(r->packet, 0x7F);
+	/* nLeftRect */
+	R2V_PACKET_WRITE_UINT16_LE(r->packet, left);
+	/* nTopRect */
+	R2V_PACKET_WRITE_UINT16_LE(r->packet, top);
+	/* nWidth */
+	R2V_PACKET_WRITE_UINT16_LE(r->packet, width);
+	/* nHeight */
+	R2V_PACKET_WRITE_UINT16_LE(r->packet, height);
+	/* bRop */
+	R2V_PACKET_WRITE_UINT8(r->packet, 0xCC);
+	/* nXSrc */
+	R2V_PACKET_WRITE_UINT16_LE(r->packet, x_src);
+	/* nYSrc */
+	R2V_PACKET_WRITE_UINT16_LE(r->packet, y_src);
+
+	/* send packet */
+	R2V_PACKET_END(r->packet);
+	if (r2v_rdp_send(r, r->packet, &hdr) == -1) {
+		goto fail;
+	}
+
+	return 0;
+
+fail:
 	return -1;
 }
 

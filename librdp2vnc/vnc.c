@@ -146,9 +146,9 @@ r2v_vnc_build_conn(r2v_vnc_t *v)
 	r2v_packet_reset(v->packet);
 	R2V_PACKET_WRITE_UINT8(v->packet, RFB_SET_ENCODINGS);
 	R2V_PACKET_WRITE_UINT8(v->packet, 0);
-	R2V_PACKET_WRITE_UINT16_BE(v->packet, 2);
+	R2V_PACKET_WRITE_UINT16_BE(v->packet, 3);
 	R2V_PACKET_WRITE_UINT32_BE(v->packet, RFB_ENCODING_RAW);
-	//R2V_PACKET_WRITE_UINT32_BE(v->packet, RFB_ENCODING_COPYRECT);
+	R2V_PACKET_WRITE_UINT32_BE(v->packet, RFB_ENCODING_COPYRECT);
 	//R2V_PACKET_WRITE_UINT32_BE(v->packet, RFB_ENCODING_CURSOR);
 	R2V_PACKET_WRITE_UINT32_BE(v->packet, RFB_ENCODING_DESKTOP_SIZE);
 	R2V_PACKET_END(v->packet);
@@ -298,6 +298,11 @@ r2v_vnc_process_copy_rect_encoding(r2v_vnc_t *v, uint16_t x, uint16_t y,
 	R2V_PACKET_READ_UINT16_BE(v->packet, src_x);
 	R2V_PACKET_READ_UINT16_BE(v->packet, src_y);
 	r2v_log_debug("copy rect from src_x: %d src_y: %d", src_x, src_y);
+
+	if (r2v_rdp_send_scrblt_order(v->session->rdp, x, y, w, h, src_x, src_y)
+		== -1) {
+		goto fail;
+	}
 
 	return 0;
 
