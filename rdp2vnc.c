@@ -47,6 +47,10 @@ process_connection(int client_fd)
 
 	/* init session */
 	session = r2v_session_init(client_fd, server_fd);
+	if (session == NULL) {
+		r2v_log_error("session init failed");
+		goto fail;
+	}
 
 	/* start proxy */
 	r2v_session_transmit(session);

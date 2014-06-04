@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include "log.h"
 #include "tpkt.h"
 
 r2v_tpkt_t *
@@ -58,7 +59,12 @@ r2v_tpkt_recv(r2v_tpkt_t *t, r2v_packet_t *p)
 	r2v_packet_reset(p);
 
 	n = recv(t->fd, p->current, TPKT_HEADER_LEN, MSG_WAITALL);
-	if (n == -1 || n == 0) {
+	if (n == -1) {
+		r2v_log_error("recevie data from RDP client error: %s", ERRMSG);
+		goto fail;
+	}
+	if (n == 0) {
+		r2v_log_info("RDP client orderly shutdown");
 		goto fail;
 	}
 	p->end += n;
@@ -73,7 +79,12 @@ r2v_tpkt_recv(r2v_tpkt_t *t, r2v_packet_t *p)
 
 	n = recv(t->fd, p->current, tpkt_len - TPKT_HEADER_LEN,
 			 MSG_WAITALL);
-	if (n == -1 || n == 0) {
+	if (n == -1) {
+		r2v_log_error("recevie data from RDP client error: %s", ERRMSG);
+		goto fail;
+	}
+	if (n == 0) {
+		r2v_log_info("RDP client orderly shutdown");
 		goto fail;
 	}
 	p->end += n;

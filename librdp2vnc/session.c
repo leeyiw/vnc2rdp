@@ -88,6 +88,8 @@ r2v_session_transmit(r2v_session_t *s)
 		goto fail;
 	}
 
+	r2v_log_info("session transmit start");
+
 	while (1) {
 		nfds = epoll_wait(s->epoll_fd, events, MAX_EVENTS, -1);
 		if (nfds == -1) {
@@ -107,5 +109,6 @@ r2v_session_transmit(r2v_session_t *s)
 	}
 
 fail:
+	r2v_log_info("session transmit end");
 	return;
 }

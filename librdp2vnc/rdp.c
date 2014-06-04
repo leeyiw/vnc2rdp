@@ -475,7 +475,7 @@ r2v_rdp_send_bitmap_update(r2v_rdp_t *r, uint16_t left, uint16_t top,
 	/* bitsPerPixel */
 	R2V_PACKET_WRITE_UINT16_LE(p, bpp);
 	/* flags */
-	R2V_PACKET_WRITE_UINT16_LE(p, NO_BITMAP_COMPRESSION_HDR);
+	R2V_PACKET_WRITE_UINT16_LE(p, 0);
 	/* bitmapLength */
 	R2V_PACKET_WRITE_UINT16_LE(p, bitmap_length);
 	/* bitmapDataStream */
