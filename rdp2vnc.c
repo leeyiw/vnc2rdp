@@ -24,19 +24,7 @@ process_connection(int client_fd)
 	const char *ip = "127.0.0.1";
 	const uint16_t port = 5901;
 	struct sockaddr_in server_addr;
-
 	r2v_session_t *session = NULL;
-
-	session = r2v_session_init();
-
-	/* accept RDP connection */
-	session->rdp = r2v_rdp_init(client_fd);
-	if (session->rdp == NULL) {
-		r2v_log_error("accept new rdp connection error");
-		goto fail;
-	}
-	session->rdp->session = session;
-	r2v_log_info("accept new rdp connection success");
 
 	/* connect to VNC server */
 	server_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -56,14 +44,11 @@ process_connection(int client_fd)
 		r2v_log_error("connect to VNC server error: %s", ERRMSG);
 		goto fail;
 	}
-	session->vnc = r2v_vnc_init(server_fd);
-	if (session->vnc == NULL) {
-		r2v_log_error("connect to vnc server error");
-		goto fail;
-	}
-	session->vnc->session = session;
-	r2v_log_info("connect to vnc server success");
 
+	/* init session */
+	session = r2v_session_init(client_fd, server_fd);
+
+	/* start proxy */
 	r2v_session_transmit(session);
 
 fail:

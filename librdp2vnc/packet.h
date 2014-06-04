@@ -54,7 +54,7 @@
 	} while (0)
 #define R2V_PACKET_WRITE_UINT16_LE(p, v) \
 	do { \
-		*((uint16_t *)((p)->current)) = (uint16_t)v; \
+		*((uint16_t *)((p)->current)) = (uint16_t)(v); \
 		(p)->current += sizeof(uint16_t); \
 	} while (0)
 #define R2V_PACKET_WRITE_UINT32_BE(p, v) \
@@ -66,7 +66,7 @@
 	} while (0)
 #define R2V_PACKET_WRITE_UINT32_LE(p, v) \
 	do { \
-		*((uint32_t *)((p)->current)) = (uint32_t)v; \
+		*((uint32_t *)((p)->current)) = (uint32_t)(v); \
 		(p)->current += sizeof(uint32_t); \
 	} while (0)
 #define R2V_PACKET_WRITE_N(p, v, n) \

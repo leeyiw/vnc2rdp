@@ -1,7 +1,8 @@
 #include "capabilities.h"
+#include "vnc.h"
 
 static void
-r2v_cap_write_general_cap(r2v_packet_t *p)
+r2v_cap_write_general_cap(r2v_rdp_t *r, r2v_packet_t *p)
 {
 	/* capabilitySetType */
 	R2V_PACKET_WRITE_UINT16_LE(p, CAPSTYPE_GENERAL);
@@ -32,7 +33,7 @@ r2v_cap_write_general_cap(r2v_packet_t *p)
 }
 
 static void
-r2v_cap_write_bitmap_cap(r2v_packet_t *p)
+r2v_cap_write_bitmap_cap(r2v_rdp_t *r, r2v_packet_t *p)
 {
 	/* capabilitySetType */
 	R2V_PACKET_WRITE_UINT16_LE(p, CAPSTYPE_BITMAP);
@@ -47,9 +48,9 @@ r2v_cap_write_bitmap_cap(r2v_packet_t *p)
 	/* receive8BitsPerPixel */
 	R2V_PACKET_WRITE_UINT16_LE(p, 0x0001);
 	/* desktopWidth */
-	R2V_PACKET_WRITE_UINT16_LE(p, 800);
+	R2V_PACKET_WRITE_UINT16_LE(p, r->session->vnc->framebuffer_width);
 	/* desktopHeight */
-	R2V_PACKET_WRITE_UINT16_LE(p, 600);
+	R2V_PACKET_WRITE_UINT16_LE(p, r->session->vnc->framebuffer_height);
 	/* pad2octets */
 	R2V_PACKET_WRITE_UINT16_LE(p, 0);
 	/* desktopResizeFlag */
@@ -67,7 +68,7 @@ r2v_cap_write_bitmap_cap(r2v_packet_t *p)
 }
 
 static void
-r2v_cap_write_input_cap(r2v_packet_t *p)
+r2v_cap_write_input_cap(r2v_rdp_t *r, r2v_packet_t *p)
 {
 	/* capabilitySetType */
 	R2V_PACKET_WRITE_UINT16_LE(p, CAPSTYPE_INPUT);
@@ -102,10 +103,10 @@ r2v_cap_get_write_count()
 }
 
 void
-r2v_cap_write_caps(r2v_packet_t *p)
+r2v_cap_write_caps(r2v_rdp_t *r, r2v_packet_t *p)
 {
 	int i = 0, write_count = r2v_cap_get_write_count();
 	for (i = 0; i < write_count; i++) {
-		r2v_cap_write_func_list[i](p);
+		r2v_cap_write_func_list[i](r, p);
 	}
 }

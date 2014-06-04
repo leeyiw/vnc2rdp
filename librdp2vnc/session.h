@@ -12,7 +12,7 @@ typedef struct _r2v_session_t {
 	int epoll_fd;
 } r2v_session_t;
 
-extern r2v_session_t *r2v_session_init();
+extern r2v_session_t *r2v_session_init(int client_fd, int server_fd);
 extern void r2v_session_destory(r2v_session_t *s);
 extern void r2v_session_transmit(r2v_session_t *s);
 

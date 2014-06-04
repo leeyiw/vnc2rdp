@@ -14,12 +14,14 @@ r2v_input_process_keyboard_event(r2v_rdp_t *r, r2v_packet_t *p)
 	r2v_log_debug("keyboard_flags: 0x%x, key_code: 0x%x", keyboard_flags,
 				  key_code);
 
-	if (r2v_vnc_send_key_event(r->session->vnc, 1, 0x0051) == -1) {
-		goto fail;
-	}
-	if (r2v_vnc_send_key_event(r->session->vnc, 0, 0x0051) == -1) {
-		goto fail;
-	}
+	// TODO XKeycodeToKeysym
+
+	//if (r2v_vnc_send_key_event(r->session->vnc, 1, 0x0051) == -1) {
+	//	goto fail;
+	//}
+	//if (r2v_vnc_send_key_event(r->session->vnc, 0, 0x0051) == -1) {
+	//	goto fail;
+	//}
 
 	return 0;
 

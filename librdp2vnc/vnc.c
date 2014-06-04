@@ -104,6 +104,8 @@ r2v_vnc_build_conn(r2v_vnc_t *v)
 	}
 	R2V_PACKET_READ_UINT16_BE(v->packet, v->framebuffer_width);
 	R2V_PACKET_READ_UINT16_BE(v->packet, v->framebuffer_height);
+	r2v_log_info("server framebuffer size: %dx%d", v->framebuffer_width,
+				 v->framebuffer_height);
 
 	/* send SetPixelFormat message */
 	r2v_packet_reset(v->packet);
@@ -175,7 +177,7 @@ fail:
 }
 
 r2v_vnc_t *
-r2v_vnc_init(int server_fd)
+r2v_vnc_init(int server_fd, r2v_session_t *s)
 {
 	r2v_vnc_t *v = NULL;
 
@@ -184,6 +186,8 @@ r2v_vnc_init(int server_fd)
 		goto fail;
 	}
 	memset(v, 0, sizeof(r2v_vnc_t));
+
+	v->session = s;
 
 	v->fd = server_fd;
 

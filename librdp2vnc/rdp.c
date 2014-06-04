@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "capabilities.h"
+#include "input.h"
 #include "license.h"
 #include "log.h"
 #include "rdp.h"
@@ -74,7 +75,7 @@ r2v_rdp_send_demand_active(r2v_rdp_t *r, r2v_packet_t *p)
 	/* pad2Octets */
 	R2V_PACKET_WRITE_UINT16_LE(p, 0);
 	/* capabilitySets */
-	r2v_cap_write_caps(p);
+	r2v_cap_write_caps(r, p);
 	*length_combined_capabilities = p->current - cap_size_ptr;
 	/* sessionId */
 	R2V_PACKET_WRITE_UINT32_LE(p, 0);
@@ -325,7 +326,7 @@ fail:
 }
 
 r2v_rdp_t *
-r2v_rdp_init(int client_fd)
+r2v_rdp_init(int client_fd, r2v_session_t *s)
 {
 	r2v_rdp_t *r = NULL;
 
@@ -334,6 +335,8 @@ r2v_rdp_init(int client_fd)
 		goto fail;
 	}
 	memset(r, 0, sizeof(r2v_rdp_t));
+
+	r->session = s;
 
 	r->packet = r2v_packet_init(65535);
 	if (r->packet == NULL) {

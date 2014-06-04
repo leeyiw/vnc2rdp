@@ -94,7 +94,7 @@ typedef struct _share_data_hdr_t {
 	uint16_t compressed_length;
 } __attribute__ ((packed)) share_data_hdr_t;
 
-extern r2v_rdp_t *r2v_rdp_init(int client_fd);
+extern r2v_rdp_t *r2v_rdp_init(int client_fd, r2v_session_t *s);
 extern void r2v_rdp_destory(r2v_rdp_t *r);
 extern void r2v_rdp_init_packet(r2v_packet_t *p, uint16_t offset);
 extern int r2v_rdp_recv(r2v_rdp_t *r, r2v_packet_t *p, share_data_hdr_t *hdr);
