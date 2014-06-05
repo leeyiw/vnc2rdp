@@ -124,6 +124,7 @@ r2v_input_process(r2v_rdp_t *r, r2v_packet_t *p)
 			break;
 		default:
 			r2v_log_warn("unknown input event message type 0x%x", message_type);
+			break;
 		}
 	}
 
