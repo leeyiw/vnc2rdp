@@ -226,10 +226,17 @@ static int
 r2v_vnc_process_raw_encoding(r2v_vnc_t *v, uint16_t x, uint16_t y,
 							 uint16_t w, uint16_t h)
 {
+	const uint32_t max_byte_per_packet = 8192;
+
+	/* buffer for swap bitmap */
+	uint8_t *buffer = NULL;
+	uint32_t buffer_size = 0;
+
 	uint16_t left, top, right, bottom, width, height, i;
 	uint32_t data_size = w * h * 4;
 	uint32_t line_size = w * 4;
-	uint8_t buffer[line_size];
+	uint32_t max_line_per_packet = max_byte_per_packet / line_size;
+	uint32_t line_per_packet;
 
 	/* if data size is larger than vnc packet's buffer, 
 	 * init a new packet with a larger buffer */
@@ -244,6 +251,14 @@ r2v_vnc_process_raw_encoding(r2v_vnc_t *v, uint16_t x, uint16_t y,
 		goto fail;
 	}
 
+	if (line_size > buffer_size) {
+		buffer_size = line_size;
+		buffer = (uint8_t *)realloc(buffer, buffer_size);
+		if (buffer == NULL) {
+			r2v_log_error("failed to allocate memory for swap buffer");
+			goto fail;
+		}
+	}
 	for (i = 0; i < h / 2; i++) {
 		memcpy(buffer, v->packet->data + i * line_size, line_size);
 		memcpy(v->packet->data + i * line_size,
@@ -251,6 +266,7 @@ r2v_vnc_process_raw_encoding(r2v_vnc_t *v, uint16_t x, uint16_t y,
 			   line_size);
 		memcpy(v->packet->data + (h - i - 1) * line_size, buffer, line_size);
 	}
+	free(buffer);
 
 /*
 	left = x;
@@ -266,18 +282,26 @@ r2v_vnc_process_raw_encoding(r2v_vnc_t *v, uint16_t x, uint16_t y,
 	}
 */
 
-	for (i = 0; i < h; i++) {
+	for (i = 0; i < h;) {
+		if (i + max_line_per_packet > h) {
+			line_per_packet = h - i;
+		} else {
+			line_per_packet = max_line_per_packet;
+		}
 		left = x;
-		top = y + h - 1 - i;
+		top = y + h - i - line_per_packet;
 		right = x + w - 1;
-		bottom = y + h - 1 - i;
+		bottom = y + h - i - 1;
 		width = w;
-		height = 1;
-		if (r2v_rdp_send_bitmap_update(v->session->rdp, left, top, right, bottom,
-									   width, height, 32, line_size,
+		height = line_per_packet;
+		if (r2v_rdp_send_bitmap_update(v->session->rdp,
+									   left, top, right, bottom,
+									   width, height, 32,
+									   line_size * line_per_packet,
 									   v->packet->data + i * line_size) == -1) {
 			goto fail;
 		}
+		i += line_per_packet;
 	}
 
 	return 0;

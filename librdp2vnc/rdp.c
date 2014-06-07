@@ -445,54 +445,47 @@ r2v_rdp_send_bitmap_update(r2v_rdp_t *r, uint16_t left, uint16_t top,
 						   uint16_t bpp, uint16_t bitmap_length,
 						   uint8_t *bitmap_data)
 {
-	r2v_packet_t *p = NULL;
 	share_data_hdr_t hdr;
 
-	p = r2v_packet_init(bitmap_length + 100);
-	if (p == NULL) {
-		goto fail;
-	}
-	r2v_rdp_init_packet(p, sizeof(share_data_hdr_t));
+	r2v_rdp_init_packet(r->packet, sizeof(share_data_hdr_t));
 
 	/* shareDataHeader */
 	hdr.share_ctrl_hdr.type = PDUTYPE_DATAPDU;
 	hdr.pdu_type2 = PDUTYPE2_UPDATE;
 	/* updateType */
-	R2V_PACKET_WRITE_UINT16_LE(p, UPDATETYPE_BITMAP);
+	R2V_PACKET_WRITE_UINT16_LE(r->packet, UPDATETYPE_BITMAP);
 	/* numberRectangles */
-	R2V_PACKET_WRITE_UINT16_LE(p, 1);
+	R2V_PACKET_WRITE_UINT16_LE(r->packet, 1);
 	/* destLeft */
-	R2V_PACKET_WRITE_UINT16_LE(p, left);
+	R2V_PACKET_WRITE_UINT16_LE(r->packet, left);
 	/* destTop */
-	R2V_PACKET_WRITE_UINT16_LE(p, top);
+	R2V_PACKET_WRITE_UINT16_LE(r->packet, top);
 	/* destRight */
-	R2V_PACKET_WRITE_UINT16_LE(p, right);
+	R2V_PACKET_WRITE_UINT16_LE(r->packet, right);
 	/* destBottom */
-	R2V_PACKET_WRITE_UINT16_LE(p, bottom);
+	R2V_PACKET_WRITE_UINT16_LE(r->packet, bottom);
 	/* width */
-	R2V_PACKET_WRITE_UINT16_LE(p, width);
+	R2V_PACKET_WRITE_UINT16_LE(r->packet, width);
 	/* height */
-	R2V_PACKET_WRITE_UINT16_LE(p, height);
+	R2V_PACKET_WRITE_UINT16_LE(r->packet, height);
 	/* bitsPerPixel */
-	R2V_PACKET_WRITE_UINT16_LE(p, bpp);
+	R2V_PACKET_WRITE_UINT16_LE(r->packet, bpp);
 	/* flags */
-	R2V_PACKET_WRITE_UINT16_LE(p, 0);
+	R2V_PACKET_WRITE_UINT16_LE(r->packet, 0);
 	/* bitmapLength */
-	R2V_PACKET_WRITE_UINT16_LE(p, bitmap_length);
+	R2V_PACKET_WRITE_UINT16_LE(r->packet, bitmap_length);
 	/* bitmapDataStream */
-	R2V_PACKET_WRITE_N(p, bitmap_data, bitmap_length);
+	R2V_PACKET_WRITE_N(r->packet, bitmap_data, bitmap_length);
 
 	/* send packet */
-	R2V_PACKET_END(p);
-	if (r2v_rdp_send(r, p, &hdr) == -1) {
+	R2V_PACKET_END(r->packet);
+	if (r2v_rdp_send(r, r->packet, &hdr) == -1) {
 		goto fail;
 	}
 
-	r2v_packet_destory(p);
 	return 0;
 
 fail:
-	r2v_packet_destory(p);
 	return -1;
 }
 

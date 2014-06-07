@@ -7,7 +7,7 @@ DEBUG_FLAGS = -g
 RELEASE_FLAGS = -O2
 OBJS = rdp2vnc.o
 INCLUDE = -I$(LIBRDP2VNC_DIR)
-LDFLAGS = -L$(LIBRDP2VNC_DIR) -lrdp2vnc
+LDFLAGS = -L$(LIBRDP2VNC_DIR) -lrdp2vnc -ltcmalloc_minimal
 
 .PHONY: debug release all librdp2vnc clean
 
