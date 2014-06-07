@@ -561,6 +561,11 @@ r2v_rdp_process_data(r2v_rdp_t *r, r2v_packet_t *p, const share_data_hdr_t *hdr)
 			goto fail;
 		}
 		break;
+	case PDUTYPE2_SHUTDOWN_REQUEST:
+		/* when client send shutdown request, we should close connection 
+		 * immediately, see [MS-RDPBCGR 1.3.1.4.1] */
+		r2v_log_debug("client send shutdown request");
+		goto fail;
 	}
 
 	return 0;
