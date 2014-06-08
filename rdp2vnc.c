@@ -1,4 +1,5 @@
 #include <arpa/inet.h>
+#include <getopt.h>
 #include <signal.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -61,6 +62,39 @@ fail:
 	r2v_session_destory(session);
 }
 
+static void
+parse_address(const char *address, char *ip, int len, uint16_t *port)
+{
+	char *colon;
+
+	if (address == NULL) {
+		return;
+	}
+
+	colon = strchr(address, ':');
+	if (colon) {
+		/* if ip buffer is larger than ip in address, then copy it,
+		 * otherwise ignore it */
+		if (colon - address <= len) {
+			memcpy(ip, address, colon - address);
+		}
+		if (*(colon + 1) != '\0') {
+			*port = atoi(colon + 1);
+		}
+	} else {
+		/* if ip buffer is larger than ip in address, then copy it,
+		 * otherwise ignore it */
+		if (strlen(address) <= len) {
+			memcpy(ip, address, strlen(address));
+		}
+	}
+}
+
+static void
+usage()
+{
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -69,12 +103,45 @@ main(int argc, char *argv[])
 
 	int listen_fd, client_fd;
 	char listen_ip[INET_ADDRSTRLEN], server_ip[INET_ADDRSTRLEN];
-	uint16_t listen_port = 3389, server_port;
+	uint16_t listen_port, server_port;
 	struct sockaddr_in listen_addr;
 
+	/* parse command line arguments */
+	int opt;
+	struct option opts[] = {
+		{"listen", required_argument, NULL, 'l'},
+		{"server", required_argument, NULL, 's'},
+		{"password", required_argument, NULL, 'p'},
+		{"help", no_argument, NULL, 'h'}
+	};
+	char *listen_address = NULL;
+	char *server_address = NULL;
+	while ((opt = getopt_long(argc, argv, "l:s:p:h", opts, NULL)) != -1) {
+		switch (opt) {
+		case 'l':
+			listen_address = optarg;
+			break;
+		case 's':
+			server_address = optarg;
+			break;
+		case 'h':
+		case '?':
+		default:
+			break;
+		}
+	}
+	/* default listen address is 0.0.0.0:3389 */
 	strcpy(listen_ip, "0.0.0.0");
-	strcpy(server_ip, "127.0.0.1");
-	server_port = 5901;
+	listen_port = 3389;
+	parse_address(listen_address, listen_ip, sizeof(listen_ip), &listen_port);
+	/* server address has no default value */
+	server_ip[0] = '\0';
+	server_port = 0;
+	parse_address(server_address, server_ip, sizeof(server_ip), &server_port);
+	if (server_ip[0] == '\0' || server_port == 0) {
+		usage();
+		exit(EXIT_FAILURE);
+	}
 
 	/* set signal handler */
 	memset(&act, 0, sizeof(act));
