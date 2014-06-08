@@ -9,6 +9,10 @@
 #define RFB_SEC_TYPE_NONE				1
 #define RFB_SEC_TYPE_VNC_AUTH			2
 
+/* SecurityResult */
+#define RFB_SEC_RESULT_OK				0
+#define RFB_SEC_RESULT_FAILED			1
+
 /* client to server messages */
 #define RFB_SET_PIXEL_FORMAT			0
 #define RFB_SET_ENCODINGS				2
@@ -43,6 +47,7 @@ typedef struct _r2v_vnc_t {
 	r2v_packet_t *packet;
 	uint8_t *buffer;				/**< buffer for swap bitmap */
 	uint32_t buffer_size;			/**< buffer size */
+	char password[8];				/**< VNC password */
 
 	uint32_t security_type;
 	uint16_t framebuffer_width;

@@ -4,7 +4,7 @@ CFLAGS = -c -Wall -fPIC
 DEBUG_FLAGS = -g
 RELEASE_FLAGS = -O2
 OBJS = session.o vnc.o rdp.o sec.o mcs.o x224.o tpkt.o packet.o capabilities.o \
-	log.o input.o
+	log.o input.o vncauth.o d3des.o
 LDFLAGS = -shared
 
 .PHONY: debug release all clean
@@ -42,6 +42,10 @@ log.o: log.c log.h
 	$(CC) $(CFLAGS) $(INCLUDE) log.c
 input.o: input.c input.h
 	$(CC) $(CFLAGS) $(INCLUDE) input.c
+vncauth.o: vncauth.c vncauth.h
+	$(CC) $(CFLAGS) $(INCLUDE) vncauth.c
+d3des.o: d3des.c d3des.h
+	$(CC) $(CFLAGS) $(INCLUDE) d3des.c
 
 clean:
 	-rm -rf $(TARGET) $(OBJS)

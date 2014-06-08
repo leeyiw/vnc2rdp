@@ -6,6 +6,7 @@
 #include "log.h"
 #include "rdp.h"
 #include "vnc.h"
+#include "vncauth.h"
 
 static int
 r2v_vnc_recv(r2v_vnc_t *v)
@@ -62,6 +63,43 @@ fail:
 }
 
 static int
+r2v_vnc_process_vnc_authentication(r2v_vnc_t *v)
+{
+	uint8_t challenge[CHALLENGESIZE];
+	uint32_t security_result;
+
+	/* receive challenge */
+	if (r2v_vnc_recv1(v, CHALLENGESIZE) == -1) {
+		goto fail;
+	}
+	R2V_PACKET_READ_N(v->packet, challenge, CHALLENGESIZE);
+	rfbEncryptBytes(challenge, v->password);
+	/* send response */
+	r2v_packet_reset(v->packet);
+	R2V_PACKET_WRITE_N(v->packet, challenge, CHALLENGESIZE);
+	R2V_PACKET_END(v->packet);
+	if (r2v_vnc_send(v) == -1) {
+		goto fail;
+	}
+	/* receive SecurityResult */
+	if (r2v_vnc_recv1(v, sizeof(security_result)) == -1) {
+		goto fail;
+	}
+	R2V_PACKET_READ_UINT32_BE(v->packet, security_result);
+	if (security_result == RFB_SEC_RESULT_OK) {
+		r2v_log_info("vnc authentication success");
+	} else {
+		r2v_log_error("vnc authentication failed");
+		goto fail;
+	}
+
+	return 0;
+
+fail:
+	return -1;
+}
+
+static int
 r2v_vnc_build_conn(r2v_vnc_t *v)
 {
 	/* receive ProtocolVersion */
@@ -79,12 +117,17 @@ r2v_vnc_build_conn(r2v_vnc_t *v)
 	}
 
 	/* receive security-type */
-	if (r2v_vnc_recv(v) == -1) {
+	if (r2v_vnc_recv1(v, sizeof(v->security_type)) == -1) {
 		goto fail;
 	}
 	R2V_PACKET_READ_UINT32_BE(v->packet, v->security_type);
 	switch (v->security_type) {
 	case RFB_SEC_TYPE_NONE:
+		break;
+	case RFB_SEC_TYPE_VNC_AUTH:
+		if (r2v_vnc_process_vnc_authentication(v) == -1) {
+			goto fail;
+		}
 		break;
 	default:
 		goto fail;
@@ -196,6 +239,7 @@ r2v_vnc_init(int server_fd, r2v_session_t *s)
 	}
 	v->buffer = NULL;
 	v->buffer_size = 0;
+	strcpy(v->password, "123456");
 
 	if (r2v_vnc_build_conn(v) == -1) {
 		goto fail;
