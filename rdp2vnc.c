@@ -1,7 +1,9 @@
 #include <arpa/inet.h>
 #include <signal.h>
 #include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "log.h"
@@ -12,17 +14,17 @@
 int g_process = 1;
 
 void
-sigint_handler(int signal)
+signal_handler(int signal)
 {
-	g_process = 0;
+	if (signal == SIGINT) {
+		g_process = 0;
+	}
 }
 
-void
-process_connection(int client_fd)
+static void
+process_connection(int client_fd, const char *server_ip, uint16_t server_port)
 {
 	int server_fd;
-	const char *ip = "127.0.0.1";
-	const uint16_t port = 5901;
 	struct sockaddr_in server_addr;
 	r2v_session_t *session = NULL;
 
@@ -34,9 +36,9 @@ process_connection(int client_fd)
 	}
 	memset(&server_addr, 0, sizeof(server_addr));
 	server_addr.sin_family = AF_INET;
-	server_addr.sin_port = htons(port);
-	if (inet_pton(AF_INET, ip, &server_addr.sin_addr) != 1) {
-		r2v_log_error("convert ip '%s' error: %s", ip, ERRMSG);
+	server_addr.sin_port = htons(server_port);
+	if (inet_pton(AF_INET, server_ip, &server_addr.sin_addr) != 1) {
+		r2v_log_error("convert ip '%s' error: %s", server_ip, ERRMSG);
 		goto fail;
 	}
 	if (connect(server_fd, (struct sockaddr *)&server_addr,
@@ -62,20 +64,25 @@ fail:
 int
 main(int argc, char *argv[])
 {
-	int listen_fd, client_fd;
 	int optval = 1;
-	struct sockaddr_in listen_addr;
-	const char *ip = "0.0.0.0";
-	const uint16_t port = 3389;
 	struct sigaction act;
 
-	/* set SIGINT signal handler */
+	int listen_fd, client_fd;
+	char listen_ip[INET_ADDRSTRLEN], server_ip[INET_ADDRSTRLEN];
+	uint16_t listen_port = 3389, server_port;
+	struct sockaddr_in listen_addr;
+
+	strcpy(listen_ip, "0.0.0.0");
+	strcpy(server_ip, "127.0.0.1");
+	server_port = 5901;
+
+	/* set signal handler */
 	memset(&act, 0, sizeof(act));
-	act.sa_handler = sigint_handler;
+	act.sa_handler = signal_handler;
 	sigemptyset(&act.sa_mask);
 	act.sa_flags = 0;
 	if (sigaction(SIGINT, &act, NULL) < 0) {
-		r2v_log_error("register signal 'SIGINT' handler error: %s", ERRMSG);
+		r2v_log_error("register signal handler error: %s", ERRMSG);
 		exit(EXIT_FAILURE);
 	}
 
@@ -93,9 +100,9 @@ main(int argc, char *argv[])
 
 	memset(&listen_addr, 0, sizeof(listen_addr));
 	listen_addr.sin_family = AF_INET;
-	listen_addr.sin_port = htons(port);
-	if (inet_pton(AF_INET, ip, &listen_addr.sin_addr) != 1) {
-		r2v_log_error("convert ip '%s' error: %s", ip, ERRMSG);
+	listen_addr.sin_port = htons(listen_port);
+	if (inet_pton(AF_INET, listen_ip, &listen_addr.sin_addr) != 1) {
+		r2v_log_error("convert ip '%s' error: %s", listen_ip, ERRMSG);
 		exit(EXIT_FAILURE);
 	}
 
@@ -117,7 +124,7 @@ main(int argc, char *argv[])
 			r2v_log_error("accept new connection error: %s", ERRMSG);
 			continue;
 		}
-		process_connection(client_fd);
+		process_connection(client_fd, server_ip, server_port);
 	}
 	close(listen_fd);
 

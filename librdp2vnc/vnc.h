@@ -41,6 +41,8 @@
 typedef struct _r2v_vnc_t {
 	int fd;
 	r2v_packet_t *packet;
+	uint8_t *buffer;				/**< buffer for swap bitmap */
+	uint32_t buffer_size;			/**< buffer size */
 
 	uint32_t security_type;
 	uint16_t framebuffer_width;

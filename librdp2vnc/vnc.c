@@ -146,11 +146,11 @@ r2v_vnc_build_conn(r2v_vnc_t *v)
 	r2v_packet_reset(v->packet);
 	R2V_PACKET_WRITE_UINT8(v->packet, RFB_SET_ENCODINGS);
 	R2V_PACKET_WRITE_UINT8(v->packet, 0);
-	R2V_PACKET_WRITE_UINT16_BE(v->packet, 3);
+	R2V_PACKET_WRITE_UINT16_BE(v->packet, 2);
 	R2V_PACKET_WRITE_UINT32_BE(v->packet, RFB_ENCODING_RAW);
 	R2V_PACKET_WRITE_UINT32_BE(v->packet, RFB_ENCODING_COPYRECT);
 	//R2V_PACKET_WRITE_UINT32_BE(v->packet, RFB_ENCODING_CURSOR);
-	R2V_PACKET_WRITE_UINT32_BE(v->packet, RFB_ENCODING_DESKTOP_SIZE);
+	//R2V_PACKET_WRITE_UINT32_BE(v->packet, RFB_ENCODING_DESKTOP_SIZE);
 	R2V_PACKET_END(v->packet);
 	if (r2v_vnc_send(v) == -1) {
 		goto fail;
@@ -190,11 +190,12 @@ r2v_vnc_init(int server_fd, r2v_session_t *s)
 	v->session = s;
 
 	v->fd = server_fd;
-
 	v->packet = r2v_packet_init(65535);
 	if (v->packet == NULL) {
 		goto fail;
 	}
+	v->buffer = NULL;
+	v->buffer_size = 0;
 
 	if (r2v_vnc_build_conn(v) == -1) {
 		goto fail;
@@ -228,10 +229,6 @@ r2v_vnc_process_raw_encoding(r2v_vnc_t *v, uint16_t x, uint16_t y,
 {
 	const uint32_t max_byte_per_packet = 8192;
 
-	/* buffer for swap bitmap */
-	uint8_t *buffer = NULL;
-	uint32_t buffer_size = 0;
-
 	uint16_t left, top, right, bottom, width, height, i;
 	uint32_t data_size = w * h * 4;
 	uint32_t line_size = w * 4;
@@ -251,22 +248,21 @@ r2v_vnc_process_raw_encoding(r2v_vnc_t *v, uint16_t x, uint16_t y,
 		goto fail;
 	}
 
-	if (line_size > buffer_size) {
-		buffer_size = line_size;
-		buffer = (uint8_t *)realloc(buffer, buffer_size);
-		if (buffer == NULL) {
+	if (line_size > v->buffer_size) {
+		v->buffer_size = line_size;
+		v->buffer = (uint8_t *)realloc(v->buffer, v->buffer_size);
+		if (v->buffer == NULL) {
 			r2v_log_error("failed to allocate memory for swap buffer");
 			goto fail;
 		}
 	}
 	for (i = 0; i < h / 2; i++) {
-		memcpy(buffer, v->packet->data + i * line_size, line_size);
+		memcpy(v->buffer, v->packet->data + i * line_size, line_size);
 		memcpy(v->packet->data + i * line_size,
 			   v->packet->data + (h - i - 1) * line_size,
 			   line_size);
-		memcpy(v->packet->data + (h - i - 1) * line_size, buffer, line_size);
+		memcpy(v->packet->data + (h - i - 1) * line_size, v->buffer, line_size);
 	}
-	free(buffer);
 
 /*
 	left = x;
