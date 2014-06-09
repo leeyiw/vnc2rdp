@@ -23,7 +23,8 @@ signal_handler(int signal)
 }
 
 static void
-process_connection(int client_fd, const char *server_ip, uint16_t server_port)
+process_connection(int client_fd, const char *server_ip, uint16_t server_port,
+				   const char *password)
 {
 	int server_fd;
 	struct sockaddr_in server_addr;
@@ -49,7 +50,7 @@ process_connection(int client_fd, const char *server_ip, uint16_t server_port)
 	}
 
 	/* init session */
-	session = r2v_session_init(client_fd, server_fd);
+	session = r2v_session_init(client_fd, server_fd, password);
 	if (session == NULL) {
 		r2v_log_error("session init failed");
 		goto fail;
@@ -66,6 +67,7 @@ static void
 parse_address(const char *address, char *ip, int len, uint16_t *port)
 {
 	char *colon;
+	size_t ip_len;
 
 	if (address == NULL) {
 		return;
@@ -75,8 +77,10 @@ parse_address(const char *address, char *ip, int len, uint16_t *port)
 	if (colon) {
 		/* if ip buffer is larger than ip in address, then copy it,
 		 * otherwise ignore it */
-		if (colon - address <= len) {
-			memcpy(ip, address, colon - address);
+		ip_len = colon - address;
+		if (ip_len <= len) {
+			memcpy(ip, address, ip_len);
+			ip[ip_len] = '\0';
 		}
 		if (*(colon + 1) != '\0') {
 			*port = atoi(colon + 1);
@@ -84,8 +88,10 @@ parse_address(const char *address, char *ip, int len, uint16_t *port)
 	} else {
 		/* if ip buffer is larger than ip in address, then copy it,
 		 * otherwise ignore it */
-		if (strlen(address) <= len) {
-			memcpy(ip, address, strlen(address));
+		ip_len = strlen(address);
+		if (ip_len <= len) {
+			memcpy(ip, address, ip_len);
+			ip[ip_len] = '\0';
 		}
 	}
 }
@@ -93,6 +99,16 @@ parse_address(const char *address, char *ip, int len, uint16_t *port)
 static void
 usage()
 {
+	const char *msg =
+"Usage: rdp2vnc [options] server:port\n"
+"\n"
+"  -l, --listen=ADDRESS            listen address, using format IP:PORT\n"
+"                                  example: -l 0.0.0.0:3389\n"
+"  -p, --password=PASSWORD         VNC server password, for VNC authentication\n"
+"  -h, --help                      print this help message and exit\n"
+"\n";
+
+	fprintf(stderr, msg);
 }
 
 int
@@ -110,38 +126,45 @@ main(int argc, char *argv[])
 	int opt;
 	struct option opts[] = {
 		{"listen", required_argument, NULL, 'l'},
-		{"server", required_argument, NULL, 's'},
 		{"password", required_argument, NULL, 'p'},
 		{"help", no_argument, NULL, 'h'}
 	};
-	char *listen_address = NULL;
-	char *server_address = NULL;
-	while ((opt = getopt_long(argc, argv, "l:s:p:h", opts, NULL)) != -1) {
+	char *listen_address = NULL, *password = NULL;
+	while ((opt = getopt_long(argc, argv, "l:p:h", opts, NULL)) != -1) {
 		switch (opt) {
 		case 'l':
 			listen_address = optarg;
 			break;
-		case 's':
-			server_address = optarg;
+		case 'p':
+			password = optarg;
 			break;
 		case 'h':
 		case '?':
 		default:
-			break;
+			usage();
+			exit(EXIT_FAILURE);
 		}
 	}
-	/* default listen address is 0.0.0.0:3389 */
-	strcpy(listen_ip, "0.0.0.0");
-	listen_port = 3389;
-	parse_address(listen_address, listen_ip, sizeof(listen_ip), &listen_port);
+
+	/* command line option must contain VNC server address */
+	if (argc - optind != 1) {
+		usage();
+		exit(EXIT_FAILURE);
+	}
+
 	/* server address has no default value */
 	server_ip[0] = '\0';
 	server_port = 0;
-	parse_address(server_address, server_ip, sizeof(server_ip), &server_port);
+	parse_address(argv[optind], server_ip, sizeof(server_ip), &server_port);
 	if (server_ip[0] == '\0' || server_port == 0) {
 		usage();
 		exit(EXIT_FAILURE);
 	}
+
+	/* default listen address is 0.0.0.0:3389 */
+	strcpy(listen_ip, "0.0.0.0");
+	listen_port = 3389;
+	parse_address(listen_address, listen_ip, sizeof(listen_ip), &listen_port);
 
 	/* set signal handler */
 	memset(&act, 0, sizeof(act));
@@ -191,7 +214,7 @@ main(int argc, char *argv[])
 			r2v_log_error("accept new connection error: %s", ERRMSG);
 			continue;
 		}
-		process_connection(client_fd, server_ip, server_port);
+		process_connection(client_fd, server_ip, server_port, password);
 	}
 	close(listen_fd);
 

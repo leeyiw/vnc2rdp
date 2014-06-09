@@ -9,7 +9,7 @@
 #include "vnc.h"
 
 r2v_session_t *
-r2v_session_init(int client_fd, int server_fd)
+r2v_session_init(int client_fd, int server_fd, const char *password)
 {
 	r2v_session_t *s = NULL;
 
@@ -20,7 +20,7 @@ r2v_session_init(int client_fd, int server_fd)
 	memset(s, 0, sizeof(r2v_session_t));
 
 	/* connect to VNC server */
-	s->vnc = r2v_vnc_init(server_fd, s);
+	s->vnc = r2v_vnc_init(server_fd, password, s);
 	if (s->vnc == NULL) {
 		r2v_log_error("connect to vnc server error");
 		goto fail;

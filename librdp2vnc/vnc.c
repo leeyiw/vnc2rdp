@@ -220,7 +220,7 @@ fail:
 }
 
 r2v_vnc_t *
-r2v_vnc_init(int server_fd, r2v_session_t *s)
+r2v_vnc_init(int server_fd, const char *password, r2v_session_t *s)
 {
 	r2v_vnc_t *v = NULL;
 
@@ -239,7 +239,9 @@ r2v_vnc_init(int server_fd, r2v_session_t *s)
 	}
 	v->buffer = NULL;
 	v->buffer_size = 0;
-	strcpy(v->password, "123456");
+	if (password != NULL) {
+		strncpy(v->password, password, sizeof(v->password));
+	}
 
 	if (r2v_vnc_build_conn(v) == -1) {
 		goto fail;
