@@ -398,8 +398,8 @@ r2v_vnc_process_framebuffer_update(r2v_vnc_t *v)
 		R2V_PACKET_READ_UINT16_BE(v->packet, w);
 		R2V_PACKET_READ_UINT16_BE(v->packet, h);
 		R2V_PACKET_READ_UINT32_BE(v->packet, encoding_type);
-		r2v_log_debug("rect %d of %d: pos: %d,%d size: %dx%d encoding: %d",
-					  i + 1, nrects, x, y, w, h, encoding_type);
+		//r2v_log_debug("rect %d of %d: pos: %d,%d size: %dx%d encoding: %d",
+		//			  i + 1, nrects, x, y, w, h, encoding_type);
 
 		switch (encoding_type) {
 		case RFB_ENCODING_RAW:
