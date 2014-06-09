@@ -42,6 +42,9 @@ typedef struct _channel_def_t {
 typedef struct _r2v_mcs_t {
 	r2v_x224_t *x224;
 
+	/* client core data */
+	uint32_t keyboard_layout;
+
 	/* client network data */
 	uint32_t channel_count;
 	channel_def_t *channel_def_array;

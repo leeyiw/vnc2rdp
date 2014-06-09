@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "log.h"
 #include "mcs.h"
 #include "tpkt.h"
 #include "sec.h"
@@ -31,6 +32,29 @@ r2v_mcs_parse_ber_encoding(r2v_packet_t *p, uint16_t identifier,
 	} else {
 		*length = len;
 	}
+	return 0;
+}
+
+static int
+r2v_mcs_parse_client_core_data(r2v_packet_t *p, r2v_mcs_t *m)
+{
+	uint32_t version;
+
+	/* version */
+	R2V_PACKET_READ_UINT32_LE(p, version);
+	r2v_log_info("client RDP version number: 0x%08x", version);
+	/* desktopWidth */
+	R2V_PACKET_SEEK_UINT16(p);
+	/* desktopHeight */
+	R2V_PACKET_SEEK_UINT16(p);
+	/* colorDepth */
+	R2V_PACKET_SEEK_UINT16(p);
+	/* SASSequence */
+	R2V_PACKET_SEEK_UINT16(p);
+	/* keyboardLayout */
+	R2V_PACKET_READ_UINT32_LE(p, m->keyboard_layout);
+	r2v_log_info("client keyboard layout: 0x%08x", m->keyboard_layout);
+
 	return 0;
 }
 
@@ -125,6 +149,9 @@ r2v_mcs_recv_conn_init(r2v_packet_t *p, r2v_mcs_t *m)
 		}
 		switch (type) {
 		case CS_CORE:
+			if (r2v_mcs_parse_client_core_data(p, m) == -1) {
+				goto fail;
+			}
 			break;
 		case CS_SECURITY:
 			break;
