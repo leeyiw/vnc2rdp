@@ -147,8 +147,15 @@ r2v_vnc_build_conn(r2v_vnc_t *v)
 	}
 	R2V_PACKET_READ_UINT16_BE(v->packet, v->framebuffer_width);
 	R2V_PACKET_READ_UINT16_BE(v->packet, v->framebuffer_height);
+	R2V_PACKET_READ_UINT8(v->packet, v->bits_per_pixel);
+	R2V_PACKET_READ_UINT8(v->packet, v->depth);
+	R2V_PACKET_READ_UINT8(v->packet, v->big_endian_flag);
+	R2V_PACKET_READ_UINT8(v->packet, v->true_colour_flag);
 	r2v_log_info("server framebuffer size: %dx%d", v->framebuffer_width,
 				 v->framebuffer_height);
+	r2v_log_info("server bits_per_pixel: %d, depth: %d, big_endian_flag: %d, "
+				 "true_colour_flag: %d", v->bits_per_pixel, v->depth,
+				 v->big_endian_flag, v->true_colour_flag);
 
 	/* send SetPixelFormat message */
 	r2v_packet_reset(v->packet);
@@ -200,16 +207,8 @@ r2v_vnc_build_conn(r2v_vnc_t *v)
 	}
 
 	/* send FramebufferUpdateRequest message */
-	r2v_packet_reset(v->packet);
-	R2V_PACKET_WRITE_UINT8(v->packet, RFB_FRAMEBUFFER_UPDATE_REQUEST);
-	/* incremental */
-	R2V_PACKET_WRITE_UINT8(v->packet, 0);
-	R2V_PACKET_WRITE_UINT16_BE(v->packet, 0);
-	R2V_PACKET_WRITE_UINT16_BE(v->packet, 0);
-	R2V_PACKET_WRITE_UINT16_BE(v->packet, v->framebuffer_width);
-	R2V_PACKET_WRITE_UINT16_BE(v->packet, v->framebuffer_height);
-	R2V_PACKET_END(v->packet);
-	if (r2v_vnc_send(v) == -1) {
+	if (r2v_vnc_send_fb_update_req(v, 0, 0, 0, v->framebuffer_width,
+								   v->framebuffer_height) == -1) {
 		goto fail;
 	}
 
@@ -239,6 +238,7 @@ r2v_vnc_init(int server_fd, const char *password, r2v_session_t *s)
 	}
 	v->buffer = NULL;
 	v->buffer_size = 0;
+
 	if (password != NULL) {
 		strncpy(v->password, password, sizeof(v->password));
 	}
@@ -398,8 +398,8 @@ r2v_vnc_process_framebuffer_update(r2v_vnc_t *v)
 		R2V_PACKET_READ_UINT16_BE(v->packet, w);
 		R2V_PACKET_READ_UINT16_BE(v->packet, h);
 		R2V_PACKET_READ_UINT32_BE(v->packet, encoding_type);
-		//r2v_log_debug("rect %d of %d: pos: %d,%d size: %dx%d encoding: %d",
-		//			  i + 1, nrects, x, y, w, h, encoding_type);
+		r2v_log_debug("rect %d of %d: pos: %d,%d size: %dx%d encoding: %d",
+					  i + 1, nrects, x, y, w, h, encoding_type);
 
 		switch (encoding_type) {
 		case RFB_ENCODING_RAW:
@@ -419,16 +419,8 @@ r2v_vnc_process_framebuffer_update(r2v_vnc_t *v)
 	}
 
 	/* send FramebufferUpdateRequest message */
-	r2v_packet_reset(v->packet);
-	R2V_PACKET_WRITE_UINT8(v->packet, RFB_FRAMEBUFFER_UPDATE_REQUEST);
-	/* incremental */
-	R2V_PACKET_WRITE_UINT8(v->packet, 1);
-	R2V_PACKET_WRITE_UINT16_BE(v->packet, 0);
-	R2V_PACKET_WRITE_UINT16_BE(v->packet, 0);
-	R2V_PACKET_WRITE_UINT16_BE(v->packet, v->framebuffer_width);
-	R2V_PACKET_WRITE_UINT16_BE(v->packet, v->framebuffer_height);
-	R2V_PACKET_END(v->packet);
-	if (r2v_vnc_send(v) == -1) {
+	if (r2v_vnc_send_fb_update_req(v, 1, 0, 0, v->framebuffer_width,
+								   v->framebuffer_height) == -1) {
 		goto fail;
 	}
 
@@ -484,6 +476,45 @@ r2v_vnc_process(r2v_vnc_t *v)
 					  msg_type);
 		goto fail;
 		break;
+	}
+
+	return 0;
+
+fail:
+	return -1;
+}
+
+int
+r2v_vnc_send_fb_update_req(r2v_vnc_t *v, uint8_t incremental,
+						   uint16_t x_pos, uint16_t y_pos,
+						   uint16_t width, uint16_t height)
+{
+	/* if client sent Suppress Output PDU, then don't send framebuffer
+	 * update request */
+	if (v->session->rdp != NULL &&
+		v->session->rdp->allow_display_updates == SUPPRESS_DISPLAY_UPDATES) {
+		return 0;
+	}
+
+	/* send FramebufferUpdateRequest message */
+	r2v_packet_reset(v->packet);
+
+	/* message-type */
+	R2V_PACKET_WRITE_UINT8(v->packet, RFB_FRAMEBUFFER_UPDATE_REQUEST);
+	/* incremental */
+	R2V_PACKET_WRITE_UINT8(v->packet, incremental);
+	/* x-position */
+	R2V_PACKET_WRITE_UINT16_BE(v->packet, x_pos);
+	/* y-position */
+	R2V_PACKET_WRITE_UINT16_BE(v->packet, y_pos);
+	/* width */
+	R2V_PACKET_WRITE_UINT16_BE(v->packet, width);
+	/* height */
+	R2V_PACKET_WRITE_UINT16_BE(v->packet, height);
+
+	R2V_PACKET_END(v->packet);
+	if (r2v_vnc_send(v) == -1) {
+		goto fail;
 	}
 
 	return 0;

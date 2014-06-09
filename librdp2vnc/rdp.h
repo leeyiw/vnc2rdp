@@ -68,12 +68,18 @@
 #define BITMAP_COMPRESSION						0x0001
 #define NO_BITMAP_COMPRESSION_HDR				0x0400
 
+/* Suppress Output PDU Data - allowDisplayUpdates */
+#define SUPPRESS_DISPLAY_UPDATES				0x00
+#define ALLOW_DISPLAY_UPDATES					0x01
+
 typedef struct _r2v_rdp_t {
 	r2v_packet_t *packet;
 	r2v_sec_t *sec;
 
+	uint8_t allow_display_updates;
+
 	r2v_session_t *session;
-} r2v_rdp_t;
+}   r2v_rdp_t;
 
 typedef struct _share_ctrl_hdr_t {
 	uint16_t total_length;

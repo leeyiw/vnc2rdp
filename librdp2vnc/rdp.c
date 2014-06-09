@@ -349,6 +349,8 @@ r2v_rdp_init(int client_fd, r2v_session_t *s)
 		goto fail;
 	}
 
+	r->allow_display_updates = ALLOW_DISPLAY_UPDATES;
+
 	if (r2v_rdp_build_conn(r) == -1) {
 		goto fail;
 	}
@@ -546,6 +548,35 @@ fail:
 }
 
 static int
+r2v_rdp_process_suppress_output(r2v_rdp_t *r, r2v_packet_t *p)
+{
+	uint16_t left, top, right, bottom;
+	r2v_vnc_t *v = r->session->vnc;
+
+	R2V_PACKET_READ_UINT8(p, r->allow_display_updates);
+	r2v_log_debug("client send suppress output with allow_display_updates: %d",
+				  r->allow_display_updates);
+
+	if (r->allow_display_updates == ALLOW_DISPLAY_UPDATES) {
+		R2V_PACKET_READ_UINT16_LE(p, left);
+		R2V_PACKET_READ_UINT16_LE(p, top);
+		R2V_PACKET_READ_UINT16_LE(p, right);
+		R2V_PACKET_READ_UINT16_LE(p, bottom);
+		r2v_log_debug("with desktop rect: %d,%d,%d,%d",
+					  left, top, right, bottom);
+		if (r2v_vnc_send_fb_update_req(v, 0, 0, 0, v->framebuffer_width,
+									   v->framebuffer_height) == -1) {
+			goto fail;
+		}
+	}
+
+	return 0;
+
+fail:
+	return -1;
+}
+
+static int
 r2v_rdp_process_data(r2v_rdp_t *r, r2v_packet_t *p, const share_data_hdr_t *hdr)
 {
 	switch (hdr->pdu_type2) {
@@ -554,11 +585,19 @@ r2v_rdp_process_data(r2v_rdp_t *r, r2v_packet_t *p, const share_data_hdr_t *hdr)
 			goto fail;
 		}
 		break;
+	case PDUTYPE2_SUPPRESS_OUTPUT:
+		if (r2v_rdp_process_suppress_output(r, p) == -1) {
+			goto fail;
+		}
+		break;
 	case PDUTYPE2_SHUTDOWN_REQUEST:
 		/* when client send shutdown request, we should close connection 
 		 * immediately, see [MS-RDPBCGR 1.3.1.4.1] */
 		r2v_log_debug("client send shutdown request");
 		goto fail;
+	default:
+		r2v_log_warn("unknown data pdu type: 0x%x", hdr->pdu_type2);
+		break;
 	}
 
 	return 0;

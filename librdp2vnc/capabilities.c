@@ -29,7 +29,7 @@ r2v_cap_write_general_cap(r2v_rdp_t *r, r2v_packet_t *p)
 	/* refreshRectSupport */
 	R2V_PACKET_WRITE_UINT8(p, 0x00);
 	/* suppressOutputSupport */
-	R2V_PACKET_WRITE_UINT8(p, 0x00);
+	R2V_PACKET_WRITE_UINT8(p, 0x01);
 }
 
 static void

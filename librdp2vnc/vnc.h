@@ -47,11 +47,15 @@ typedef struct _r2v_vnc_t {
 	r2v_packet_t *packet;
 	uint8_t *buffer;				/**< buffer for swap bitmap */
 	uint32_t buffer_size;			/**< buffer size */
-	char password[8];				/**< VNC password */
 
 	uint32_t security_type;
+	char password[8];				/**< VNC password */
 	uint16_t framebuffer_width;
 	uint16_t framebuffer_height;
+	uint8_t bits_per_pixel;
+	uint8_t depth;
+	uint8_t big_endian_flag;
+	uint8_t true_colour_flag;
 
 	r2v_session_t *session;
 } r2v_vnc_t;
@@ -60,6 +64,9 @@ extern r2v_vnc_t *r2v_vnc_init(int server_fd, const char *password,
 							   r2v_session_t *s);
 extern void r2v_vnc_destory(r2v_vnc_t *v);
 extern int r2v_vnc_process(r2v_vnc_t *v);
+extern int r2v_vnc_send_fb_update_req(r2v_vnc_t *v, uint8_t incremental,
+									  uint16_t x_pos, uint16_t y_pos,
+									  uint16_t width, uint16_t height);
 extern int r2v_vnc_send_key_event(r2v_vnc_t *v, uint8_t down_flag,
 								  uint32_t key);
 extern int r2v_vnc_send_pointer_event(r2v_vnc_t *v, uint8_t btn_mask,
