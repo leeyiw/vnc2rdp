@@ -46,4 +46,4 @@ extern int r2v_sec_send(r2v_sec_t *s, r2v_packet_t *p, uint16_t sec_flags,
 						uint16_t channel_id);
 extern void r2v_sec_init_packet(r2v_packet_t *p);
 
-#endif
+#endif  // _SEC_H_

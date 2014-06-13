@@ -25,4 +25,4 @@
 
 extern int r2v_input_process(r2v_rdp_t *r, r2v_packet_t *p);
 
-#endif
+#endif  // _INPUT_H_

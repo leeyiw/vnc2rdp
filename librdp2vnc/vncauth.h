@@ -5,4 +5,4 @@
 
 extern void rfbEncryptBytes(unsigned char *bytes, char *passwd);
 
-#endif
+#endif  // _VNCAUTH_H_

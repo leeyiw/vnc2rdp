@@ -34,4 +34,4 @@
 #define TS_ENC_ELLIPSE_CB_ORDER			0x1A
 #define TS_ENC_INDEX_ORDER				0x1B
 
-#endif
+#endif  // _ORDERS_H_

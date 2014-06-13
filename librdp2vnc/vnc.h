@@ -72,4 +72,4 @@ extern int r2v_vnc_send_key_event(r2v_vnc_t *v, uint8_t down_flag,
 extern int r2v_vnc_send_pointer_event(r2v_vnc_t *v, uint8_t btn_mask,
 									  uint16_t x_pos, uint16_t y_pos);
 
-#endif
+#endif  // _VNC_H_

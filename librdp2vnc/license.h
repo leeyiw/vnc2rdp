@@ -45,4 +45,4 @@
 #define ST_RESET_PHASE_TO_START			0x00000003
 #define ST_RESEND_LAST_MESSAGE			0x00000004
 
-#endif
+#endif  // _LICENSE_H_

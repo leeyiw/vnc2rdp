@@ -78,4 +78,4 @@ typedef void (*r2v_cap_write_func)(r2v_rdp_t *r, r2v_packet_t *p);
 extern uint16_t r2v_cap_get_write_count();
 extern void r2v_cap_write_caps(r2v_rdp_t *r, r2v_packet_t *p);
 
-#endif
+#endif  // _CAPABILITIES_H_

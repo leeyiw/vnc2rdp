@@ -115,4 +115,4 @@ extern int r2v_rdp_send_scrblt_order(r2v_rdp_t *r, uint16_t left, uint16_t top,
 									 uint16_t x_src, uint16_t y_src);
 extern int r2v_rdp_process(r2v_rdp_t *r);
 
-#endif
+#endif  // _RDP_H_

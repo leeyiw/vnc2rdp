@@ -16,4 +16,4 @@ extern int r2v_tpkt_recv(r2v_tpkt_t *t, r2v_packet_t *p);
 extern int r2v_tpkt_send(r2v_tpkt_t *t, r2v_packet_t *p);
 extern void r2v_tpkt_init_packet(r2v_packet_t *p);
 
-#endif
+#endif  // _TPKT_H_

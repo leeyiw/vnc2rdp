@@ -33,4 +33,4 @@ extern int r2v_x224_recv(r2v_x224_t *x, r2v_packet_t *p);
 extern int r2v_x224_send(r2v_x224_t *x, r2v_packet_t *p);
 extern void r2v_x224_init_packet(r2v_packet_t *p);
 
-#endif
+#endif  // _X224_H_

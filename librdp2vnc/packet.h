@@ -99,4 +99,4 @@ extern r2v_packet_t *r2v_packet_init(size_t max_len);
 extern void r2v_packet_reset(r2v_packet_t *p);
 extern void r2v_packet_destory(r2v_packet_t *p);
 
-#endif
+#endif  // _PACKET_H_
