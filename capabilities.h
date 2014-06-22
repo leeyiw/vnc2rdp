@@ -1,5 +1,5 @@
 /**
- * rdp2vnc: proxy for RDP client connect to VNC server
+ * vnc2rdp: proxy for RDP client connect to VNC server
  *
  * Copyright 2014 Yiwei Li <leeyiw@gmail.com>
  *
@@ -91,9 +91,9 @@
 #define INPUT_FLAG_UNUSED2					0x0080
 #define TS_INPUT_FLAG_MOUSE_HWHEEL			0x0100
 
-typedef void (*r2v_cap_write_func)(r2v_rdp_t *r, r2v_packet_t *p);
+typedef void (*v2r_cap_write_func)(v2r_rdp_t *r, v2r_packet_t *p);
 
-extern uint16_t r2v_cap_get_write_count();
-extern void r2v_cap_write_caps(r2v_rdp_t *r, r2v_packet_t *p);
+extern uint16_t v2r_cap_get_write_count();
+extern void v2r_cap_write_caps(v2r_rdp_t *r, v2r_packet_t *p);
 
 #endif  // _CAPABILITIES_H_

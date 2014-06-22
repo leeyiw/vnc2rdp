@@ -1,5 +1,5 @@
 /**
- * rdp2vnc: proxy for RDP client connect to VNC server
+ * vnc2rdp: proxy for RDP client connect to VNC server
  *
  * Copyright 2014 Yiwei Li <leeyiw@gmail.com>
  *
@@ -22,57 +22,57 @@
 #include "sec.h"
 
 static int
-r2v_sec_build_conn(int client_fd, r2v_sec_t *s)
+v2r_sec_build_conn(int client_fd, v2r_sec_t *s)
 {
 	return 0;
 }
 
-r2v_sec_t *
-r2v_sec_init(int client_fd)
+v2r_sec_t *
+v2r_sec_init(int client_fd)
 {
-	r2v_sec_t *s = NULL;
+	v2r_sec_t *s = NULL;
 
-	s = (r2v_sec_t *)malloc(sizeof(r2v_sec_t));
+	s = (v2r_sec_t *)malloc(sizeof(v2r_sec_t));
 	if (s == NULL) {
 		goto fail;
 	}
-	memset(s, 0, sizeof(r2v_sec_t));
+	memset(s, 0, sizeof(v2r_sec_t));
 
-	s->mcs = r2v_mcs_init(client_fd);
+	s->mcs = v2r_mcs_init(client_fd);
 	if (s->mcs == NULL) {
 		goto fail;
 	}
 
-	if (r2v_sec_build_conn(client_fd, s) == -1) {
+	if (v2r_sec_build_conn(client_fd, s) == -1) {
 		goto fail;
 	}
 
 	return s;
 
 fail:
-	r2v_sec_destory(s);
+	v2r_sec_destory(s);
 	return NULL;
 }
 
 void
-r2v_sec_destory(r2v_sec_t *s)
+v2r_sec_destory(v2r_sec_t *s)
 {
 	if (s == NULL) {
 		return;
 	}
 	if (s->mcs != NULL) {
-		r2v_mcs_destory(s->mcs);
+		v2r_mcs_destory(s->mcs);
 	}
 	free(s);
 }
 
 int
-r2v_sec_recv(r2v_sec_t *s, r2v_packet_t *p, uint16_t *sec_flags,
+v2r_sec_recv(v2r_sec_t *s, v2r_packet_t *p, uint16_t *sec_flags,
 			 uint16_t *channel_id)
 {
 	uint8_t choice = 0;
 
-	if (r2v_mcs_recv(s->mcs, p, &choice, channel_id) == -1) {
+	if (v2r_mcs_recv(s->mcs, p, &choice, channel_id) == -1) {
 		goto fail;
 	}
 	/* check if is send data request */
@@ -80,9 +80,9 @@ r2v_sec_recv(r2v_sec_t *s, r2v_packet_t *p, uint16_t *sec_flags,
 		goto fail;
 	}
 	/* parse security header */
-	R2V_PACKET_READ_UINT16_LE(p, *sec_flags);
+	V2R_PACKET_READ_UINT16_LE(p, *sec_flags);
 	/* skip flagsHi */
-	R2V_PACKET_SEEK(p, 2);
+	V2R_PACKET_SEEK(p, 2);
 
 	return 0;
 
@@ -91,19 +91,19 @@ fail:
 }
 
 int
-r2v_sec_send(r2v_sec_t *s, r2v_packet_t *p, uint16_t sec_flags,
+v2r_sec_send(v2r_sec_t *s, v2r_packet_t *p, uint16_t sec_flags,
 			 uint16_t channel_id)
 {
 	p->current = p->sec;
-	R2V_PACKET_WRITE_UINT16_LE(p, sec_flags);
-	R2V_PACKET_WRITE_UINT16_LE(p, 0);
-	return r2v_mcs_send(s->mcs, p, MCS_SEND_DATA_INDICATION, channel_id);
+	V2R_PACKET_WRITE_UINT16_LE(p, sec_flags);
+	V2R_PACKET_WRITE_UINT16_LE(p, 0);
+	return v2r_mcs_send(s->mcs, p, MCS_SEND_DATA_INDICATION, channel_id);
 }
 
 void
-r2v_sec_init_packet(r2v_packet_t *p)
+v2r_sec_init_packet(v2r_packet_t *p)
 {
-	r2v_mcs_init_packet(p);
+	v2r_mcs_init_packet(p);
 	p->sec = p->current;
-	R2V_PACKET_SEEK(p, 4);
+	V2R_PACKET_SEEK(p, 4);
 }

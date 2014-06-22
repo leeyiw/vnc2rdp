@@ -1,5 +1,5 @@
 /**
- * rdp2vnc: proxy for RDP client connect to VNC server
+ * vnc2rdp: proxy for RDP client connect to VNC server
  *
  * Copyright 2014 Yiwei Li <leeyiw@gmail.com>
  *
@@ -21,23 +21,23 @@
 #include "vnc.h"
 
 static int
-r2v_input_process_keyboard_event(r2v_rdp_t *r, r2v_packet_t *p)
+v2r_input_process_keyboard_event(v2r_rdp_t *r, v2r_packet_t *p)
 {
 	uint16_t keyboard_flags, key_code;
 
-	R2V_PACKET_READ_UINT16_LE(p, keyboard_flags);
-	R2V_PACKET_READ_UINT16_LE(p, key_code);
-	R2V_PACKET_SEEK_UINT16(p);
+	V2R_PACKET_READ_UINT16_LE(p, keyboard_flags);
+	V2R_PACKET_READ_UINT16_LE(p, key_code);
+	V2R_PACKET_SEEK_UINT16(p);
 
-	r2v_log_debug("keyboard_flags: 0x%x, key_code: 0x%x", keyboard_flags,
+	v2r_log_debug("keyboard_flags: 0x%x, key_code: 0x%x", keyboard_flags,
 				  key_code);
 
 	// TODO XKeycodeToKeysym
 
-	//if (r2v_vnc_send_key_event(r->session->vnc, 1, 0x0051) == -1) {
+	//if (v2r_vnc_send_key_event(r->session->vnc, 1, 0x0051) == -1) {
 	//	goto fail;
 	//}
-	//if (r2v_vnc_send_key_event(r->session->vnc, 0, 0x0051) == -1) {
+	//if (v2r_vnc_send_key_event(r->session->vnc, 0, 0x0051) == -1) {
 	//	goto fail;
 	//}
 
@@ -48,19 +48,19 @@ fail:
 }
 
 static int
-r2v_input_process_mouse_event(r2v_rdp_t *r, r2v_packet_t *p)
+v2r_input_process_mouse_event(v2r_rdp_t *r, v2r_packet_t *p)
 {
 	uint8_t button_mask = 0;
 	static uint8_t button1_clicked, button2_clicked, button3_clicked;
 	uint16_t pointer_flags;
 	static uint16_t x_pos, y_pos;
 
-	R2V_PACKET_READ_UINT16_LE(p, pointer_flags);
+	V2R_PACKET_READ_UINT16_LE(p, pointer_flags);
 	if (pointer_flags & PTRFLAGS_MOVE) {
-		R2V_PACKET_READ_UINT16_LE(p, x_pos);
-		R2V_PACKET_READ_UINT16_LE(p, y_pos);
+		V2R_PACKET_READ_UINT16_LE(p, x_pos);
+		V2R_PACKET_READ_UINT16_LE(p, y_pos);
 	} else {
-		R2V_PACKET_SEEK(p, 4);
+		V2R_PACKET_SEEK(p, 4);
 	}
 	if (pointer_flags & PTRFLAGS_WHEEL) {
 		if (pointer_flags & PTRFLAGS_WHEEL_NEGATIVE) {
@@ -68,11 +68,11 @@ r2v_input_process_mouse_event(r2v_rdp_t *r, r2v_packet_t *p)
 		} else {
 			button_mask = RFB_POINTER_WHEEL_UPWARDS;
 		}
-		if (r2v_vnc_send_pointer_event(r->session->vnc, button_mask, x_pos,
+		if (v2r_vnc_send_pointer_event(r->session->vnc, button_mask, x_pos,
 									   y_pos) == -1) {
 			goto fail;
 		}
-		if (r2v_vnc_send_pointer_event(r->session->vnc, 0, x_pos,
+		if (v2r_vnc_send_pointer_event(r->session->vnc, 0, x_pos,
 									   y_pos) == -1) {
 			goto fail;
 		}
@@ -93,7 +93,7 @@ r2v_input_process_mouse_event(r2v_rdp_t *r, r2v_packet_t *p)
 		if (button3_clicked) {
 			button_mask |= RFB_POINTER_BUTTON_MIDDLE;
 		}
-		if (r2v_vnc_send_pointer_event(r->session->vnc, button_mask, x_pos,
+		if (v2r_vnc_send_pointer_event(r->session->vnc, button_mask, x_pos,
 									   y_pos) == -1) {
 			goto fail;
 		}
@@ -106,42 +106,42 @@ fail:
 }
 
 int
-r2v_input_process(r2v_rdp_t *r, r2v_packet_t *p)
+v2r_input_process(v2r_rdp_t *r, v2r_packet_t *p)
 {
 	uint16_t i, num_events, message_type;
 	uint32_t event_time;
 
-	R2V_PACKET_READ_UINT16_LE(p, num_events);
-	R2V_PACKET_SEEK_UINT16(p);
+	V2R_PACKET_READ_UINT16_LE(p, num_events);
+	V2R_PACKET_SEEK_UINT16(p);
 
 	for (i = 0; i < num_events; i++) {
-		R2V_PACKET_READ_UINT32_LE(p, event_time);
-		R2V_PACKET_READ_UINT16_LE(p, message_type);
+		V2R_PACKET_READ_UINT32_LE(p, event_time);
+		V2R_PACKET_READ_UINT16_LE(p, message_type);
 		switch (message_type) {
 		case INPUT_EVENT_SYNC:
-			R2V_PACKET_SEEK(p, 6);
+			V2R_PACKET_SEEK(p, 6);
 			break;
 		case INPUT_EVENT_UNUSED:
-			R2V_PACKET_SEEK(p, 6);
+			V2R_PACKET_SEEK(p, 6);
 			break;
 		case INPUT_EVENT_SCANCODE:
-			if (r2v_input_process_keyboard_event(r, p) == -1) {
+			if (v2r_input_process_keyboard_event(r, p) == -1) {
 				goto fail;
 			}
 			break;
 		case INPUT_EVENT_UNICODE:
-			R2V_PACKET_SEEK(p, 6);
+			V2R_PACKET_SEEK(p, 6);
 			break;
 		case INPUT_EVENT_MOUSE:
-			if (r2v_input_process_mouse_event(r, p) == -1) {
+			if (v2r_input_process_mouse_event(r, p) == -1) {
 				goto fail;
 			}
 			break;
 		case INPUT_EVENT_MOUSEX:
-			R2V_PACKET_SEEK(p, 6);
+			V2R_PACKET_SEEK(p, 6);
 			break;
 		default:
-			r2v_log_warn("unknown input event message type 0x%x", message_type);
+			v2r_log_warn("unknown input event message type 0x%x", message_type);
 			break;
 		}
 	}

@@ -1,5 +1,5 @@
 /**
- * rdp2vnc: proxy for RDP client connect to VNC server
+ * vnc2rdp: proxy for RDP client connect to VNC server
  *
  * Copyright 2014 Yiwei Li <leeyiw@gmail.com>
  *
@@ -90,14 +90,14 @@
 #define SUPPRESS_DISPLAY_UPDATES				0x00
 #define ALLOW_DISPLAY_UPDATES					0x01
 
-typedef struct _r2v_rdp_t {
-	r2v_packet_t *packet;
-	r2v_sec_t *sec;
+typedef struct _v2r_rdp_t {
+	v2r_packet_t *packet;
+	v2r_sec_t *sec;
 
 	uint8_t allow_display_updates;
 
-	r2v_session_t *session;
-}   r2v_rdp_t;
+	v2r_session_t *session;
+}   v2r_rdp_t;
 
 typedef struct _share_ctrl_hdr_t {
 	uint16_t total_length;
@@ -118,19 +118,19 @@ typedef struct _share_data_hdr_t {
 	uint16_t compressed_length;
 } __attribute__ ((packed)) share_data_hdr_t;
 
-extern r2v_rdp_t *r2v_rdp_init(int client_fd, r2v_session_t *s);
-extern void r2v_rdp_destory(r2v_rdp_t *r);
-extern void r2v_rdp_init_packet(r2v_packet_t *p, uint16_t offset);
-extern int r2v_rdp_recv(r2v_rdp_t *r, r2v_packet_t *p, share_data_hdr_t *hdr);
-extern int r2v_rdp_send(r2v_rdp_t *r, r2v_packet_t *p, share_data_hdr_t *hdr);
-extern int r2v_rdp_send_bitmap_update(r2v_rdp_t *r, uint16_t left, uint16_t top,
+extern v2r_rdp_t *v2r_rdp_init(int client_fd, v2r_session_t *s);
+extern void v2r_rdp_destory(v2r_rdp_t *r);
+extern void v2r_rdp_init_packet(v2r_packet_t *p, uint16_t offset);
+extern int v2r_rdp_recv(v2r_rdp_t *r, v2r_packet_t *p, share_data_hdr_t *hdr);
+extern int v2r_rdp_send(v2r_rdp_t *r, v2r_packet_t *p, share_data_hdr_t *hdr);
+extern int v2r_rdp_send_bitmap_update(v2r_rdp_t *r, uint16_t left, uint16_t top,
 									  uint16_t right, uint16_t bottom,
 									  uint16_t width, uint16_t height,
 									  uint16_t bpp, uint16_t bitmap_length,
 									  uint8_t *data);
-extern int r2v_rdp_send_scrblt_order(r2v_rdp_t *r, uint16_t left, uint16_t top,
+extern int v2r_rdp_send_scrblt_order(v2r_rdp_t *r, uint16_t left, uint16_t top,
 									 uint16_t width, uint16_t height,
 									 uint16_t x_src, uint16_t y_src);
-extern int r2v_rdp_process(r2v_rdp_t *r);
+extern int v2r_rdp_process(v2r_rdp_t *r);
 
 #endif  // _RDP_H_

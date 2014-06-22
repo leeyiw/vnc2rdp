@@ -1,5 +1,5 @@
 /**
- * rdp2vnc: proxy for RDP client connect to VNC server
+ * vnc2rdp: proxy for RDP client connect to VNC server
  *
  * Copyright 2014 Yiwei Li <leeyiw@gmail.com>
  *
@@ -22,24 +22,24 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define R2V_PACKET_READ_REMAIN(p, n) \
+#define V2R_PACKET_READ_REMAIN(p, n) \
 	((p)->current + n <= (p)->end)
 
-#define R2V_PACKET_READ_UINT8(p, v) \
+#define V2R_PACKET_READ_UINT8(p, v) \
 	do { \
 		(v) = *(p)->current++; \
 	} while (0)
-#define R2V_PACKET_READ_UINT16_BE(p, v) \
+#define V2R_PACKET_READ_UINT16_BE(p, v) \
 	do { \
 		(v) = *((uint8_t *)((p)->current++)) << 8; \
 		(v) |= *((uint8_t *)((p)->current++)); \
 	} while (0)
-#define R2V_PACKET_READ_UINT16_LE(p, v) \
+#define V2R_PACKET_READ_UINT16_LE(p, v) \
 	do { \
 		(v) = *((uint16_t *)((p)->current)); \
 		(p)->current += sizeof(uint16_t); \
 	} while (0)
-#define R2V_PACKET_READ_UINT32_BE(p, v) \
+#define V2R_PACKET_READ_UINT32_BE(p, v) \
 	do { \
 		(v) = (uint32_t) \
 			( \
@@ -50,57 +50,57 @@
 			); \
 		(p)->current += sizeof(uint32_t); \
 	} while (0)
-#define R2V_PACKET_READ_UINT32_LE(p, v) \
+#define V2R_PACKET_READ_UINT32_LE(p, v) \
 	do { \
 		(v) = *((uint32_t *)((p)->current)); \
 		(p)->current += sizeof(uint32_t); \
 	} while (0)
-#define R2V_PACKET_READ_N(p, v, n) \
+#define V2R_PACKET_READ_N(p, v, n) \
 	do { \
 		memcpy((v), (p)->current, (n)); \
 		(p)->current += n; \
 	} while (0)
 
-#define R2V_PACKET_WRITE_UINT8(p, v) \
+#define V2R_PACKET_WRITE_UINT8(p, v) \
 	do { \
 		*(p)->current++ = (uint8_t)v; \
 	} while (0)
-#define R2V_PACKET_WRITE_UINT16_BE(p, v) \
+#define V2R_PACKET_WRITE_UINT16_BE(p, v) \
 	do { \
 		*((p)->current++) = (uint8_t)((v) >> 8); \
 		*((p)->current++) = (uint8_t)((v) >> 0); \
 	} while (0)
-#define R2V_PACKET_WRITE_UINT16_LE(p, v) \
+#define V2R_PACKET_WRITE_UINT16_LE(p, v) \
 	do { \
 		*((uint16_t *)((p)->current)) = (uint16_t)(v); \
 		(p)->current += sizeof(uint16_t); \
 	} while (0)
-#define R2V_PACKET_WRITE_UINT32_BE(p, v) \
+#define V2R_PACKET_WRITE_UINT32_BE(p, v) \
 	do { \
 		*((p)->current++) = (int8_t)((v) >> 24); \
 		*((p)->current++) = (int8_t)((v) >> 16); \
 		*((p)->current++) = (int8_t)((v) >> 8); \
 		*((p)->current++) = (int8_t)((v) >> 0); \
 	} while (0)
-#define R2V_PACKET_WRITE_UINT32_LE(p, v) \
+#define V2R_PACKET_WRITE_UINT32_LE(p, v) \
 	do { \
 		*((uint32_t *)((p)->current)) = (uint32_t)(v); \
 		(p)->current += sizeof(uint32_t); \
 	} while (0)
-#define R2V_PACKET_WRITE_N(p, v, n) \
+#define V2R_PACKET_WRITE_N(p, v, n) \
 	do { \
 		memcpy((p)->current, (v), (n)); \
 		(p)->current += n; \
 	} while (0)
 
-#define R2V_PACKET_SEEK(p, n)			(p)->current += (n)
-#define R2V_PACKET_SEEK_UINT8(p)		R2V_PACKET_SEEK(p, sizeof(uint8_t))
-#define R2V_PACKET_SEEK_UINT16(p)		R2V_PACKET_SEEK(p, sizeof(uint16_t))
+#define V2R_PACKET_SEEK(p, n)			(p)->current += (n)
+#define V2R_PACKET_SEEK_UINT8(p)		V2R_PACKET_SEEK(p, sizeof(uint8_t))
+#define V2R_PACKET_SEEK_UINT16(p)		V2R_PACKET_SEEK(p, sizeof(uint16_t))
 
-#define R2V_PACKET_END(p)				(p)->end = (p)->current
-#define R2V_PACKET_LEN(p)				((p)->end - (p)->data)
+#define V2R_PACKET_END(p)				(p)->end = (p)->current
+#define V2R_PACKET_LEN(p)				((p)->end - (p)->data)
 
-typedef struct _r2v_packet_t {
+typedef struct _v2r_packet_t {
 	uint32_t max_len;
 	uint8_t *data;
 	uint8_t *current;
@@ -111,10 +111,10 @@ typedef struct _r2v_packet_t {
 	uint8_t *mcs;
 	uint8_t *sec;
 	uint8_t *rdp;
-} r2v_packet_t;
+} v2r_packet_t;
 
-extern r2v_packet_t *r2v_packet_init(size_t max_len);
-extern void r2v_packet_reset(r2v_packet_t *p);
-extern void r2v_packet_destory(r2v_packet_t *p);
+extern v2r_packet_t *v2r_packet_init(size_t max_len);
+extern void v2r_packet_reset(v2r_packet_t *p);
+extern void v2r_packet_destory(v2r_packet_t *p);
 
 #endif  // _PACKET_H_

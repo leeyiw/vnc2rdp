@@ -1,5 +1,5 @@
 /**
- * rdp2vnc: proxy for RDP client connect to VNC server
+ * vnc2rdp: proxy for RDP client connect to VNC server
  *
  * Copyright 2014 Yiwei Li <leeyiw@gmail.com>
  *
@@ -46,39 +46,39 @@ process_connection(int client_fd, const char *server_ip, uint16_t server_port,
 {
 	int server_fd;
 	struct sockaddr_in server_addr;
-	r2v_session_t *session = NULL;
+	v2r_session_t *session = NULL;
 
 	/* connect to VNC server */
 	server_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (server_fd == -1) {
-		r2v_log_error("create socket for VNC server error: %s", ERRMSG);
+		v2r_log_error("create socket for VNC server error: %s", ERRMSG);
 		goto fail;
 	}
 	memset(&server_addr, 0, sizeof(server_addr));
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_port = htons(server_port);
 	if (inet_pton(AF_INET, server_ip, &server_addr.sin_addr) != 1) {
-		r2v_log_error("convert ip '%s' error: %s", server_ip, ERRMSG);
+		v2r_log_error("convert ip '%s' error: %s", server_ip, ERRMSG);
 		goto fail;
 	}
 	if (connect(server_fd, (struct sockaddr *)&server_addr,
 				sizeof(server_addr)) == -1) {
-		r2v_log_error("connect to VNC server error: %s", ERRMSG);
+		v2r_log_error("connect to VNC server error: %s", ERRMSG);
 		goto fail;
 	}
 
 	/* init session */
-	session = r2v_session_init(client_fd, server_fd, password);
+	session = v2r_session_init(client_fd, server_fd, password);
 	if (session == NULL) {
-		r2v_log_error("session init failed");
+		v2r_log_error("session init failed");
 		goto fail;
 	}
 
 	/* start proxy */
-	r2v_session_transmit(session);
+	v2r_session_transmit(session);
 
 fail:
-	r2v_session_destory(session);
+	v2r_session_destory(session);
 }
 
 static void
@@ -118,7 +118,7 @@ static void
 usage()
 {
 	const char *msg =
-"Usage: rdp2vnc [options] server:port\n"
+"Usage: vnc2rdp [options] server:port\n"
 "\n"
 "  -l, --listen=ADDRESS            listen address, using format IP:PORT\n"
 "                                  example: -l 0.0.0.0:3389\n"
@@ -190,19 +190,19 @@ main(int argc, char *argv[])
 	sigemptyset(&act.sa_mask);
 	act.sa_flags = 0;
 	if (sigaction(SIGINT, &act, NULL) < 0) {
-		r2v_log_error("register signal handler error: %s", ERRMSG);
+		v2r_log_error("register signal handler error: %s", ERRMSG);
 		exit(EXIT_FAILURE);
 	}
 
 	if ((listen_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-		r2v_log_error("create listen socket error: %s", ERRMSG);
+		v2r_log_error("create listen socket error: %s", ERRMSG);
 		exit(EXIT_FAILURE);
 	}
 
 	/* set address reuse */
 	if (setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval))
 		== -1) {
-		r2v_log_error("set socket reuse address error: %s", ERRMSG);
+		v2r_log_error("set socket reuse address error: %s", ERRMSG);
 		exit(EXIT_FAILURE);
 	}
 
@@ -210,26 +210,26 @@ main(int argc, char *argv[])
 	listen_addr.sin_family = AF_INET;
 	listen_addr.sin_port = htons(listen_port);
 	if (inet_pton(AF_INET, listen_ip, &listen_addr.sin_addr) != 1) {
-		r2v_log_error("convert ip '%s' error: %s", listen_ip, ERRMSG);
+		v2r_log_error("convert ip '%s' error: %s", listen_ip, ERRMSG);
 		exit(EXIT_FAILURE);
 	}
 
 	if (bind(listen_fd, (struct sockaddr *)&listen_addr, sizeof(listen_addr))
 		== -1) {
-		r2v_log_error("bind socket to address error: %s", ERRMSG);
+		v2r_log_error("bind socket to address error: %s", ERRMSG);
 		exit(EXIT_FAILURE);
 	}
 
 	if (listen(listen_fd, 64) == -1) {
-		r2v_log_error("listen socket error: %s", ERRMSG);
+		v2r_log_error("listen socket error: %s", ERRMSG);
 		exit(EXIT_FAILURE);
 	}
 
-	r2v_log_info("listening new connection");
+	v2r_log_info("listening new connection");
 	while (g_process) {
 		client_fd = accept(listen_fd, NULL, NULL);
 		if (client_fd == -1) {
-			r2v_log_error("accept new connection error: %s", ERRMSG);
+			v2r_log_error("accept new connection error: %s", ERRMSG);
 			continue;
 		}
 		process_connection(client_fd, server_ip, server_port, password);

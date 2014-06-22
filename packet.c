@@ -1,5 +1,5 @@
 /**
- * rdp2vnc: proxy for RDP client connect to VNC server
+ * vnc2rdp: proxy for RDP client connect to VNC server
  *
  * Copyright 2014 Yiwei Li <leeyiw@gmail.com>
  *
@@ -21,16 +21,16 @@
 
 #include "packet.h"
 
-r2v_packet_t *
-r2v_packet_init(size_t max_len)
+v2r_packet_t *
+v2r_packet_init(size_t max_len)
 {
-	r2v_packet_t *p = NULL;
+	v2r_packet_t *p = NULL;
 
-	p = (r2v_packet_t *)malloc(sizeof(r2v_packet_t));
+	p = (v2r_packet_t *)malloc(sizeof(v2r_packet_t));
 	if (p == NULL) {
 		return NULL;
 	}
-	memset(p, 0, sizeof(r2v_packet_t));
+	memset(p, 0, sizeof(v2r_packet_t));
 
 	p->data = (uint8_t *)malloc(max_len);
 	if (p->data == NULL) {
@@ -42,12 +42,12 @@ r2v_packet_init(size_t max_len)
 	return p;
 
 fail:
-	r2v_packet_destory(p);
+	v2r_packet_destory(p);
 	return NULL;
 }
 
 void
-r2v_packet_reset(r2v_packet_t *p)
+v2r_packet_reset(v2r_packet_t *p)
 {
 	if (p == NULL) {
 		return;
@@ -61,7 +61,7 @@ r2v_packet_reset(r2v_packet_t *p)
 }
 
 void
-r2v_packet_destory(r2v_packet_t *p)
+v2r_packet_destory(v2r_packet_t *p)
 {
 	if (p == NULL) {
 		return;

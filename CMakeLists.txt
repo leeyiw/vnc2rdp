@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 2.6)
-project (rdp2vnc C)
+project (vnc2rdp C)
 
-set(RDP2VNC_SRC
+set(VNC2RDP_SRC
 	capabilities.c
 	capabilities.h
 	d3des.c
@@ -18,7 +18,7 @@ set(RDP2VNC_SRC
 	packet.h
 	rdp.c
 	rdp.h
-	rdp2vnc.c
+	vnc2rdp.c
 	sec.c
 	sec.h
 	session.c
@@ -33,4 +33,4 @@ set(RDP2VNC_SRC
 	x224.h
 	)
 
-add_executable(rdp2vnc ${RDP2VNC_SRC})
+add_executable(vnc2rdp ${VNC2RDP_SRC})

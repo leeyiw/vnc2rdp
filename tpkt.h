@@ -1,5 +1,5 @@
 /**
- * rdp2vnc: proxy for RDP client connect to VNC server
+ * vnc2rdp: proxy for RDP client connect to VNC server
  *
  * Copyright 2014 Yiwei Li <leeyiw@gmail.com>
  *
@@ -24,14 +24,14 @@
 #define TPKT_HEADER_LEN		4
 #define TPKT_VERSION		3
 
-typedef struct _r2v_tpkt_t {
+typedef struct _v2r_tpkt_t {
 	int fd;
-} r2v_tpkt_t;
+} v2r_tpkt_t;
 
-extern r2v_tpkt_t *r2v_tpkt_init(int client_fd);
-extern void r2v_tpkt_destory(r2v_tpkt_t *t);
-extern int r2v_tpkt_recv(r2v_tpkt_t *t, r2v_packet_t *p);
-extern int r2v_tpkt_send(r2v_tpkt_t *t, r2v_packet_t *p);
-extern void r2v_tpkt_init_packet(r2v_packet_t *p);
+extern v2r_tpkt_t *v2r_tpkt_init(int client_fd);
+extern void v2r_tpkt_destory(v2r_tpkt_t *t);
+extern int v2r_tpkt_recv(v2r_tpkt_t *t, v2r_packet_t *p);
+extern int v2r_tpkt_send(v2r_tpkt_t *t, v2r_packet_t *p);
+extern void v2r_tpkt_init_packet(v2r_packet_t *p);
 
 #endif  // _TPKT_H_

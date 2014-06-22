@@ -1,5 +1,5 @@
 /**
- * rdp2vnc: proxy for RDP client connect to VNC server
+ * vnc2rdp: proxy for RDP client connect to VNC server
  *
  * Copyright 2014 Yiwei Li <leeyiw@gmail.com>
  *
@@ -57,8 +57,8 @@ typedef struct _channel_def_t {
 	uint32_t options;
 } channel_def_t;
 
-typedef struct _r2v_mcs_t {
-	r2v_x224_t *x224;
+typedef struct _v2r_mcs_t {
+	v2r_x224_t *x224;
 
 	/* client core data */
 	uint32_t keyboard_layout;
@@ -67,14 +67,14 @@ typedef struct _r2v_mcs_t {
 	uint32_t channel_count;
 	channel_def_t *channel_def_array;
 	uint16_t user_channel_id;
-} r2v_mcs_t;
+} v2r_mcs_t;
 
-extern r2v_mcs_t *r2v_mcs_init(int client_fd);
-extern void r2v_mcs_destory(r2v_mcs_t *m);
-extern int r2v_mcs_recv(r2v_mcs_t *m, r2v_packet_t *p, uint8_t *choice,
+extern v2r_mcs_t *v2r_mcs_init(int client_fd);
+extern void v2r_mcs_destory(v2r_mcs_t *m);
+extern int v2r_mcs_recv(v2r_mcs_t *m, v2r_packet_t *p, uint8_t *choice,
 						uint16_t *channel_id);
-extern int r2v_mcs_send(r2v_mcs_t *m, r2v_packet_t *p, uint8_t choice,
+extern int v2r_mcs_send(v2r_mcs_t *m, v2r_packet_t *p, uint8_t choice,
 						uint16_t channel_id);
-extern void r2v_mcs_init_packet(r2v_packet_t *p);
+extern void v2r_mcs_init_packet(v2r_packet_t *p);
 
 #endif

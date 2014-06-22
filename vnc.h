@@ -1,5 +1,5 @@
 /**
- * rdp2vnc: proxy for RDP client connect to VNC server
+ * vnc2rdp: proxy for RDP client connect to VNC server
  *
  * Copyright 2014 Yiwei Li <leeyiw@gmail.com>
  *
@@ -60,9 +60,9 @@
 #define RFB_ENCODING_CURSOR				-239
 #define RFB_ENCODING_DESKTOP_SIZE		-223
 
-typedef struct _r2v_vnc_t {
+typedef struct _v2r_vnc_t {
 	int fd;
-	r2v_packet_t *packet;
+	v2r_packet_t *packet;
 	uint8_t *buffer;				/**< buffer for swap bitmap */
 	uint32_t buffer_size;			/**< buffer size */
 
@@ -75,19 +75,19 @@ typedef struct _r2v_vnc_t {
 	uint8_t big_endian_flag;
 	uint8_t true_colour_flag;
 
-	r2v_session_t *session;
-} r2v_vnc_t;
+	v2r_session_t *session;
+} v2r_vnc_t;
 
-extern r2v_vnc_t *r2v_vnc_init(int server_fd, const char *password,
-							   r2v_session_t *s);
-extern void r2v_vnc_destory(r2v_vnc_t *v);
-extern int r2v_vnc_process(r2v_vnc_t *v);
-extern int r2v_vnc_send_fb_update_req(r2v_vnc_t *v, uint8_t incremental,
+extern v2r_vnc_t *v2r_vnc_init(int server_fd, const char *password,
+							   v2r_session_t *s);
+extern void v2r_vnc_destory(v2r_vnc_t *v);
+extern int v2r_vnc_process(v2r_vnc_t *v);
+extern int v2r_vnc_send_fb_update_req(v2r_vnc_t *v, uint8_t incremental,
 									  uint16_t x_pos, uint16_t y_pos,
 									  uint16_t width, uint16_t height);
-extern int r2v_vnc_send_key_event(r2v_vnc_t *v, uint8_t down_flag,
+extern int v2r_vnc_send_key_event(v2r_vnc_t *v, uint8_t down_flag,
 								  uint32_t key);
-extern int r2v_vnc_send_pointer_event(r2v_vnc_t *v, uint8_t btn_mask,
+extern int v2r_vnc_send_pointer_event(v2r_vnc_t *v, uint8_t btn_mask,
 									  uint16_t x_pos, uint16_t y_pos);
 
 #endif  // _VNC_H_

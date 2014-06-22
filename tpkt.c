@@ -1,5 +1,5 @@
 /**
- * rdp2vnc: proxy for RDP client connect to VNC server
+ * vnc2rdp: proxy for RDP client connect to VNC server
  *
  * Copyright 2014 Yiwei Li <leeyiw@gmail.com>
  *
@@ -28,17 +28,17 @@
 #include "log.h"
 #include "tpkt.h"
 
-r2v_tpkt_t *
-r2v_tpkt_init(int client_fd)
+v2r_tpkt_t *
+v2r_tpkt_init(int client_fd)
 {
 	int optval;
-	r2v_tpkt_t *t = NULL;
+	v2r_tpkt_t *t = NULL;
 
-	t = (r2v_tpkt_t *)malloc(sizeof(r2v_tpkt_t));
+	t = (v2r_tpkt_t *)malloc(sizeof(v2r_tpkt_t));
 	if (t == NULL) {
 		goto fail;
 	}
-	memset(t, 0, sizeof(r2v_tpkt_t));
+	memset(t, 0, sizeof(v2r_tpkt_t));
 
 	t->fd = client_fd;
 	/* disable Negle algorithm */
@@ -51,12 +51,12 @@ r2v_tpkt_init(int client_fd)
 	return t;
 
 fail:
-	r2v_tpkt_destory(t);
+	v2r_tpkt_destory(t);
 	return NULL;
 }
 
 void
-r2v_tpkt_destory(r2v_tpkt_t *t)
+v2r_tpkt_destory(v2r_tpkt_t *t)
 {
 	if (t == NULL) {
 		return;
@@ -68,41 +68,41 @@ r2v_tpkt_destory(r2v_tpkt_t *t)
 }
 
 int
-r2v_tpkt_recv(r2v_tpkt_t *t, r2v_packet_t *p)
+v2r_tpkt_recv(v2r_tpkt_t *t, v2r_packet_t *p)
 {
 	int n = 0;
 	uint8_t tpkt_version = 0;
 	uint16_t tpkt_len = 0;
 
-	r2v_packet_reset(p);
+	v2r_packet_reset(p);
 
 	n = recv(t->fd, p->current, TPKT_HEADER_LEN, MSG_WAITALL);
 	if (n == -1) {
-		r2v_log_error("recevie data from RDP client error: %s", ERRMSG);
+		v2r_log_error("recevie data from RDP client error: %s", ERRMSG);
 		goto fail;
 	}
 	if (n == 0) {
-		r2v_log_info("RDP client orderly shutdown");
+		v2r_log_info("RDP client orderly shutdown");
 		goto fail;
 	}
 	p->end += n;
 
 	/* TPKT version must be 3 */
-	R2V_PACKET_READ_UINT8(p, tpkt_version);
+	V2R_PACKET_READ_UINT8(p, tpkt_version);
 	if (tpkt_version != TPKT_VERSION) {
 		goto fail;
 	}
-	R2V_PACKET_SEEK_UINT8(p);
-	R2V_PACKET_READ_UINT16_BE(p, tpkt_len);
+	V2R_PACKET_SEEK_UINT8(p);
+	V2R_PACKET_READ_UINT16_BE(p, tpkt_len);
 
 	n = recv(t->fd, p->current, tpkt_len - TPKT_HEADER_LEN,
 			 MSG_WAITALL);
 	if (n == -1) {
-		r2v_log_error("recevie data from RDP client error: %s", ERRMSG);
+		v2r_log_error("recevie data from RDP client error: %s", ERRMSG);
 		goto fail;
 	}
 	if (n == 0) {
-		r2v_log_info("RDP client orderly shutdown");
+		v2r_log_info("RDP client orderly shutdown");
 		goto fail;
 	}
 	p->end += n;
@@ -114,14 +114,14 @@ fail:
 }
 
 int
-r2v_tpkt_send(r2v_tpkt_t *t, r2v_packet_t *p)
+v2r_tpkt_send(v2r_tpkt_t *t, v2r_packet_t *p)
 {
 	p->current = p->tpkt;
-	R2V_PACKET_WRITE_UINT8(p, TPKT_VERSION);
-	R2V_PACKET_WRITE_UINT8(p, 0);
-	R2V_PACKET_WRITE_UINT16_BE(p, R2V_PACKET_LEN(p));
+	V2R_PACKET_WRITE_UINT8(p, TPKT_VERSION);
+	V2R_PACKET_WRITE_UINT8(p, 0);
+	V2R_PACKET_WRITE_UINT16_BE(p, V2R_PACKET_LEN(p));
 
-	if (-1 == send(t->fd, p->data, R2V_PACKET_LEN(p), 0)) {
+	if (-1 == send(t->fd, p->data, V2R_PACKET_LEN(p), 0)) {
 		goto fail;
 	}
 
@@ -132,9 +132,9 @@ fail:
 }
 
 void
-r2v_tpkt_init_packet(r2v_packet_t *p)
+v2r_tpkt_init_packet(v2r_packet_t *p)
 {
-	r2v_packet_reset(p);
+	v2r_packet_reset(p);
 	p->tpkt = p->current;
-	R2V_PACKET_SEEK(p, TPKT_HEADER_LEN);
+	V2R_PACKET_SEEK(p, TPKT_HEADER_LEN);
 }

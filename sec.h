@@ -1,5 +1,5 @@
 /**
- * rdp2vnc: proxy for RDP client connect to VNC server
+ * vnc2rdp: proxy for RDP client connect to VNC server
  *
  * Copyright 2014 Yiwei Li <leeyiw@gmail.com>
  *
@@ -52,16 +52,16 @@
 #define SEC_HEARTBEAT			0x4000
 #define SEC_FLAGSHI_VALID		0x8000
 
-typedef struct _r2v_sec_t {
-	r2v_mcs_t *mcs;
-} r2v_sec_t;
+typedef struct _v2r_sec_t {
+	v2r_mcs_t *mcs;
+} v2r_sec_t;
 
-extern r2v_sec_t *r2v_sec_init(int client_fd);
-extern void r2v_sec_destory(r2v_sec_t *s);
-extern int r2v_sec_recv(r2v_sec_t *s, r2v_packet_t *p, uint16_t *sec_flags,
+extern v2r_sec_t *v2r_sec_init(int client_fd);
+extern void v2r_sec_destory(v2r_sec_t *s);
+extern int v2r_sec_recv(v2r_sec_t *s, v2r_packet_t *p, uint16_t *sec_flags,
 						uint16_t *channel_id);
-extern int r2v_sec_send(r2v_sec_t *s, r2v_packet_t *p, uint16_t sec_flags,
+extern int v2r_sec_send(v2r_sec_t *s, v2r_packet_t *p, uint16_t sec_flags,
 						uint16_t channel_id);
-extern void r2v_sec_init_packet(r2v_packet_t *p);
+extern void v2r_sec_init_packet(v2r_packet_t *p);
 
 #endif  // _SEC_H_

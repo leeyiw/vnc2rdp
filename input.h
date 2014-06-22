@@ -1,5 +1,5 @@
 /**
- * rdp2vnc: proxy for RDP client connect to VNC server
+ * vnc2rdp: proxy for RDP client connect to VNC server
  *
  * Copyright 2014 Yiwei Li <leeyiw@gmail.com>
  *
@@ -41,6 +41,6 @@
 #define PTRFLAGS_BUTTON3			0x4000
 #define PTRFLAGS_BUTTON_ALL			0x7000
 
-extern int r2v_input_process(r2v_rdp_t *r, r2v_packet_t *p);
+extern int v2r_input_process(v2r_rdp_t *r, v2r_packet_t *p);
 
 #endif  // _INPUT_H_

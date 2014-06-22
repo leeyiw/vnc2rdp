@@ -1,5 +1,5 @@
 /**
- * rdp2vnc: proxy for RDP client connect to VNC server
+ * vnc2rdp: proxy for RDP client connect to VNC server
  *
  * Copyright 2014 Yiwei Li <leeyiw@gmail.com>
  *
@@ -39,16 +39,16 @@
 #include "tpkt.h"
 #include "packet.h"
 
-typedef struct _r2v_x224_t {
-	r2v_tpkt_t *tpkt;
+typedef struct _v2r_x224_t {
+	v2r_tpkt_t *tpkt;
 
 	uint32_t requested_protocols;
-} r2v_x224_t;
+} v2r_x224_t;
 
-extern r2v_x224_t *r2v_x224_init(int client_fd);
-extern void r2v_x224_destory(r2v_x224_t *x);
-extern int r2v_x224_recv(r2v_x224_t *x, r2v_packet_t *p);
-extern int r2v_x224_send(r2v_x224_t *x, r2v_packet_t *p);
-extern void r2v_x224_init_packet(r2v_packet_t *p);
+extern v2r_x224_t *v2r_x224_init(int client_fd);
+extern void v2r_x224_destory(v2r_x224_t *x);
+extern int v2r_x224_recv(v2r_x224_t *x, v2r_packet_t *p);
+extern int v2r_x224_send(v2r_x224_t *x, v2r_packet_t *p);
+extern void v2r_x224_init_packet(v2r_packet_t *p);
 
 #endif  // _X224_H_

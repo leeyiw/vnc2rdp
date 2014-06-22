@@ -1,5 +1,5 @@
 /**
- * rdp2vnc: proxy for RDP client connect to VNC server
+ * vnc2rdp: proxy for RDP client connect to VNC server
  *
  * Copyright 2014 Yiwei Li <leeyiw@gmail.com>
  *
@@ -26,51 +26,51 @@
 #include "session.h"
 #include "vnc.h"
 
-r2v_session_t *
-r2v_session_init(int client_fd, int server_fd, const char *password)
+v2r_session_t *
+v2r_session_init(int client_fd, int server_fd, const char *password)
 {
-	r2v_session_t *s = NULL;
+	v2r_session_t *s = NULL;
 
-	s = (r2v_session_t *)malloc(sizeof(r2v_session_t));
+	s = (v2r_session_t *)malloc(sizeof(v2r_session_t));
 	if (s == NULL) {
 		goto fail;
 	}
-	memset(s, 0, sizeof(r2v_session_t));
+	memset(s, 0, sizeof(v2r_session_t));
 
 	/* connect to VNC server */
-	s->vnc = r2v_vnc_init(server_fd, password, s);
+	s->vnc = v2r_vnc_init(server_fd, password, s);
 	if (s->vnc == NULL) {
-		r2v_log_error("connect to vnc server error");
+		v2r_log_error("connect to vnc server error");
 		goto fail;
 	}
-	r2v_log_info("connect to vnc server success");
+	v2r_log_info("connect to vnc server success");
 
 	/* accept RDP connection */
-	s->rdp = r2v_rdp_init(client_fd, s);
+	s->rdp = v2r_rdp_init(client_fd, s);
 	if (s->rdp == NULL) {
-		r2v_log_error("accept new rdp connection error");
+		v2r_log_error("accept new rdp connection error");
 		goto fail;
 	}
-	r2v_log_info("accept new rdp connection success");
+	v2r_log_info("accept new rdp connection success");
 
 	return s;
 
 fail:
-	r2v_session_destory(s);
+	v2r_session_destory(s);
 	return NULL;
 }
 
 void
-r2v_session_destory(r2v_session_t *s)
+v2r_session_destory(v2r_session_t *s)
 {
 	if (s == NULL) {
 		return;
 	}
 	if (s->rdp != NULL) {
-		r2v_rdp_destory(s->rdp);
+		v2r_rdp_destory(s->rdp);
 	}
 	if (s->vnc != NULL) {
-		r2v_vnc_destory(s->vnc);
+		v2r_vnc_destory(s->vnc);
 	}
 	if (s->epoll_fd != 0) {
 		close(s->epoll_fd);
@@ -79,7 +79,7 @@ r2v_session_destory(r2v_session_t *s)
 }
 
 void
-r2v_session_transmit(r2v_session_t *s)
+v2r_session_transmit(v2r_session_t *s)
 {
 	int i, nfds, rdp_fd, vnc_fd;
 	struct epoll_event ev, events[MAX_EVENTS];
@@ -106,7 +106,7 @@ r2v_session_transmit(r2v_session_t *s)
 		goto fail;
 	}
 
-	r2v_log_info("session transmit start");
+	v2r_log_info("session transmit start");
 
 	while (1) {
 		nfds = epoll_wait(s->epoll_fd, events, MAX_EVENTS, -1);
@@ -115,11 +115,11 @@ r2v_session_transmit(r2v_session_t *s)
 		}
 		for (i = 0; i < nfds; i++) {
 			if (events[i].data.fd == rdp_fd) {
-				if (r2v_rdp_process(s->rdp) == -1) {
+				if (v2r_rdp_process(s->rdp) == -1) {
 					goto fail;
 				}
 			} else if (events[i].data.fd == vnc_fd) {
-				if (r2v_vnc_process(s->vnc) == -1) {
+				if (v2r_vnc_process(s->vnc) == -1) {
 					goto fail;
 				}
 			}
@@ -127,6 +127,6 @@ r2v_session_transmit(r2v_session_t *s)
 	}
 
 fail:
-	r2v_log_info("session transmit end");
+	v2r_log_info("session transmit end");
 	return;
 }
