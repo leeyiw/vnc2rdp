@@ -115,10 +115,10 @@ parse_address(const char *address, char *ip, int len, uint16_t *port)
 }
 
 static void
-usage()
+usage(const char *name)
 {
 	const char *msg =
-"Usage: vnc2rdp [options] server:port\n"
+"Usage: %s [options] server:port\n"
 "\n"
 "  -l, --listen=ADDRESS            listen address, using format IP:PORT\n"
 "                                  example: -l 0.0.0.0:3389\n"
@@ -126,7 +126,7 @@ usage()
 "  -h, --help                      print this help message and exit\n"
 "\n";
 
-	fprintf(stderr, msg);
+	fprintf(stderr, msg, name);
 }
 
 int
@@ -159,14 +159,14 @@ main(int argc, char *argv[])
 		case 'h':
 		case '?':
 		default:
-			usage();
+			usage(argv[0]);
 			exit(EXIT_FAILURE);
 		}
 	}
 
 	/* command line option must contain VNC server address */
 	if (argc - optind != 1) {
-		usage();
+		usage(argv[0]);
 		exit(EXIT_FAILURE);
 	}
 
@@ -175,7 +175,7 @@ main(int argc, char *argv[])
 	server_port = 0;
 	parse_address(argv[optind], server_ip, sizeof(server_ip), &server_port);
 	if (server_ip[0] == '\0' || server_port == 0) {
-		usage();
+		usage(argv[0]);
 		exit(EXIT_FAILURE);
 	}
 
