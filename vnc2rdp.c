@@ -30,6 +30,10 @@
 #include "session.h"
 #include "vnc.h"
 
+#define ERROR(...) \
+	fprintf(stderr, "ERROR: "); \
+	fprintf(stderr, __VA_ARGS__)
+
 int g_process = 1;
 
 void
@@ -41,8 +45,7 @@ signal_handler(int signal)
 }
 
 static void
-process_connection(int client_fd, const char *server_ip, uint16_t server_port,
-				   const char *password)
+process_connection(int client_fd, const v2r_session_opt_t *opt)
 {
 	int server_fd;
 	struct sockaddr_in server_addr;
@@ -56,9 +59,9 @@ process_connection(int client_fd, const char *server_ip, uint16_t server_port,
 	}
 	memset(&server_addr, 0, sizeof(server_addr));
 	server_addr.sin_family = AF_INET;
-	server_addr.sin_port = htons(server_port);
-	if (inet_pton(AF_INET, server_ip, &server_addr.sin_addr) != 1) {
-		v2r_log_error("convert ip '%s' error: %s", server_ip, ERRMSG);
+	server_addr.sin_port = htons(opt->vnc_server_port);
+	if (inet_pton(AF_INET, opt->vnc_server_ip, &server_addr.sin_addr) != 1) {
+		v2r_log_error("convert ip '%s' error: %s", opt->vnc_server_ip, ERRMSG);
 		goto fail;
 	}
 	if (connect(server_fd, (struct sockaddr *)&server_addr,
@@ -68,7 +71,7 @@ process_connection(int client_fd, const char *server_ip, uint16_t server_port,
 	}
 
 	/* init session */
-	session = v2r_session_init(client_fd, server_fd, password);
+	session = v2r_session_init(client_fd, server_fd, opt);
 	if (session == NULL) {
 		v2r_log_error("session init failed");
 		goto fail;
@@ -96,7 +99,7 @@ parse_address(const char *address, char *ip, int len, uint16_t *port)
 		/* if ip buffer is larger than ip in address, then copy it,
 		 * otherwise ignore it */
 		ip_len = colon - address;
-		if (ip_len <= len) {
+		if (ip_len != 0 && ip_len <= len) {
 			memcpy(ip, address, ip_len);
 			ip[ip_len] = '\0';
 		}
@@ -120,10 +123,13 @@ usage(const char *name)
 	const char *msg =
 "Usage: %s [options] server:port\n"
 "\n"
-"  -l, --listen=ADDRESS            listen address, using format IP:PORT\n"
-"                                  example: -l 0.0.0.0:3389\n"
-"  -p, --password=PASSWORD         VNC server password, for VNC authentication\n"
-"  -h, --help                      print this help message and exit\n"
+"  -l, --listen=ADDRESS       listen address, default: 0.0.0.0:3389\n"
+"  -p, --password=PASSWORD    VNC server password, for VNC authentication\n"
+"  -s, --shared               connect to VNC server use share mode, share \n"
+"                             desktop with other clients (default)\n"
+"  -n, --noshared             connect to VNC server use exclusive mode, \n"
+"                             by disconnect all other client\n"
+"  -h, --help                 print this help message and exit\n"
 "\n";
 
 	fprintf(stderr, msg, name);
@@ -132,29 +138,42 @@ usage(const char *name)
 int
 main(int argc, char *argv[])
 {
-	int optval = 1;
-	struct sigaction act;
-
-	int listen_fd, client_fd;
-	char listen_ip[INET_ADDRSTRLEN], server_ip[INET_ADDRSTRLEN];
-	uint16_t listen_port, server_port;
+	char listen_ip[INET_ADDRSTRLEN];
+	uint8_t shared = 0, noshared = 0;
+	uint16_t listen_port;
+	int listen_fd, client_fd, ch, optval = 1;
 	struct sockaddr_in listen_addr;
-
-	/* parse command line arguments */
-	int opt;
-	struct option opts[] = {
+	struct sigaction act;
+	struct option longopts[] = {
 		{"listen", required_argument, NULL, 'l'},
 		{"password", required_argument, NULL, 'p'},
-		{"help", no_argument, NULL, 'h'}
+		{"shared", no_argument, NULL, 's'},
+		{"noshared", no_argument, NULL, 'n'},
+		{"help", no_argument, NULL, 'h'},
+		{NULL, 0, NULL, 0}
 	};
-	char *listen_address = NULL, *password = NULL;
-	while ((opt = getopt_long(argc, argv, "l:p:h", opts, NULL)) != -1) {
-		switch (opt) {
+	v2r_session_opt_t opt;
+
+	/* clear session option */
+	memset(&opt, 0, sizeof(opt));
+
+	/* default listen address is 0.0.0.0:3389 */
+	strcpy(listen_ip, "0.0.0.0");
+	listen_port = 3389;
+
+	while ((ch = getopt_long(argc, argv, "l:p:snh", longopts, NULL)) != -1) {
+		switch (ch) {
 		case 'l':
-			listen_address = optarg;
+			parse_address(optarg, listen_ip, sizeof(listen_ip), &listen_port);
 			break;
 		case 'p':
-			password = optarg;
+			strncpy(opt.vnc_password, optarg, sizeof(opt.vnc_password));
+			break;
+		case 's':
+			shared = 1;
+			break;
+		case 'n':
+			noshared = 1;
 			break;
 		case 'h':
 		case '?':
@@ -164,6 +183,14 @@ main(int argc, char *argv[])
 		}
 	}
 
+	/* --shared and --noshared cannot use at same the time */
+	if (shared && noshared) {
+		ERROR("Both --shared and --noshared are specified\n");
+		usage(argv[0]);
+		exit(EXIT_FAILURE);
+	}
+	opt.shared = noshared ? 0 : 1;
+
 	/* command line option must contain VNC server address */
 	if (argc - optind != 1) {
 		usage(argv[0]);
@@ -171,18 +198,12 @@ main(int argc, char *argv[])
 	}
 
 	/* server address has no default value */
-	server_ip[0] = '\0';
-	server_port = 0;
-	parse_address(argv[optind], server_ip, sizeof(server_ip), &server_port);
-	if (server_ip[0] == '\0' || server_port == 0) {
+	parse_address(argv[optind], opt.vnc_server_ip, sizeof(opt.vnc_server_ip),
+				  &(opt.vnc_server_port));
+	if (opt.vnc_server_ip[0] == '\0' || opt.vnc_server_port == 0) {
 		usage(argv[0]);
 		exit(EXIT_FAILURE);
 	}
-
-	/* default listen address is 0.0.0.0:3389 */
-	strcpy(listen_ip, "0.0.0.0");
-	listen_port = 3389;
-	parse_address(listen_address, listen_ip, sizeof(listen_ip), &listen_port);
 
 	/* set signal handler */
 	memset(&act, 0, sizeof(act));
@@ -232,7 +253,7 @@ main(int argc, char *argv[])
 			v2r_log_error("accept new connection error: %s", ERRMSG);
 			continue;
 		}
-		process_connection(client_fd, server_ip, server_port, password);
+		process_connection(client_fd, &opt);
 	}
 	close(listen_fd);
 

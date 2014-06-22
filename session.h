@@ -19,19 +19,29 @@
 #ifndef _SESSION_H_
 #define _SESSION_H_
 
+#include <netinet/in.h>
+
 #define MAX_EVENTS					64
 
 typedef struct _v2r_rdp_t v2r_rdp_t;
 typedef struct _v2r_vnc_t v2r_vnc_t;
 
+typedef struct _v2r_session_opt_t {
+	char vnc_server_ip[INET_ADDRSTRLEN];
+	uint16_t vnc_server_port;
+	char vnc_password[8];
+	uint8_t shared;
+} v2r_session_opt_t;
+
 typedef struct _v2r_session_t {
 	v2r_rdp_t *rdp;
 	v2r_vnc_t *vnc;
 	int epoll_fd;
+	const v2r_session_opt_t *opt;
 } v2r_session_t;
 
 extern v2r_session_t *v2r_session_init(int client_fd, int server_fd,
-									   const char *password);
+									   const v2r_session_opt_t *opt);
 extern void v2r_session_destory(v2r_session_t *s);
 extern void v2r_session_transmit(v2r_session_t *s);
 

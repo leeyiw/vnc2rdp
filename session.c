@@ -27,7 +27,7 @@
 #include "vnc.h"
 
 v2r_session_t *
-v2r_session_init(int client_fd, int server_fd, const char *password)
+v2r_session_init(int client_fd, int server_fd, const v2r_session_opt_t *opt)
 {
 	v2r_session_t *s = NULL;
 
@@ -37,8 +37,10 @@ v2r_session_init(int client_fd, int server_fd, const char *password)
 	}
 	memset(s, 0, sizeof(v2r_session_t));
 
+	s->opt = opt;
+
 	/* connect to VNC server */
-	s->vnc = v2r_vnc_init(server_fd, password, s);
+	s->vnc = v2r_vnc_init(server_fd, s);
 	if (s->vnc == NULL) {
 		v2r_log_error("connect to vnc server error");
 		goto fail;

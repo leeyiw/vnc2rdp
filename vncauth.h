@@ -21,6 +21,6 @@
 
 #define CHALLENGESIZE	16
 
-extern void rfbEncryptBytes(unsigned char *bytes, char *passwd);
+extern void rfbEncryptBytes(unsigned char *bytes, const char *passwd);
 
 #endif  // _VNCAUTH_H_

@@ -91,7 +91,7 @@ v2r_vnc_process_vnc_authentication(v2r_vnc_t *v)
 		goto fail;
 	}
 	V2R_PACKET_READ_N(v->packet, challenge, CHALLENGESIZE);
-	rfbEncryptBytes(challenge, v->password);
+	rfbEncryptBytes(challenge, v->session->opt->vnc_password);
 	/* send response */
 	v2r_packet_reset(v->packet);
 	V2R_PACKET_WRITE_N(v->packet, challenge, CHALLENGESIZE);
@@ -153,7 +153,8 @@ v2r_vnc_build_conn(v2r_vnc_t *v)
 
 	/* send ClientInit message */
 	v2r_packet_reset(v->packet);
-	V2R_PACKET_WRITE_UINT8(v->packet, 1);
+	V2R_PACKET_WRITE_UINT8(v->packet, v->session->opt->shared);
+	v2r_log_info("connect with shared-flag: %d", v->session->opt->shared);
 	V2R_PACKET_END(v->packet);
 	if (v2r_vnc_send(v) == -1) {
 		goto fail;
@@ -237,7 +238,7 @@ fail:
 }
 
 v2r_vnc_t *
-v2r_vnc_init(int server_fd, const char *password, v2r_session_t *s)
+v2r_vnc_init(int server_fd, v2r_session_t *s)
 {
 	v2r_vnc_t *v = NULL;
 
@@ -256,10 +257,6 @@ v2r_vnc_init(int server_fd, const char *password, v2r_session_t *s)
 	}
 	v->buffer = NULL;
 	v->buffer_size = 0;
-
-	if (password != NULL) {
-		strncpy(v->password, password, sizeof(v->password));
-	}
 
 	if (v2r_vnc_build_conn(v) == -1) {
 		goto fail;

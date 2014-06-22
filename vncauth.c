@@ -25,7 +25,7 @@
  * Encrypt CHALLENGESIZE bytes in memory using a password.
  */
 void
-rfbEncryptBytes(unsigned char *bytes, char *passwd)
+rfbEncryptBytes(unsigned char *bytes, const char *passwd)
 {
 	unsigned char key[8];
 	unsigned int i;
