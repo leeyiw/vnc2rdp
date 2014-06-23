@@ -24,9 +24,3 @@ $ cmake .
 ```
 
 After Makefile was generated, build vnc2rdp with `make`, and install with `make install`. All files installed to your system will be listed in `install_manifest.txt`.
-
-## Screenshots
-
-Here is a screenshot of mstsc.exe connect to RealVNC server:
-
-![screenshot](http://leeyiw.github.io/vnc2rdp/images/screenshot.png =200x)
