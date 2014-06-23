@@ -7,7 +7,7 @@ Currently, vnc2rdp only support:
 RDP client:
 
 * mstsc.exe
-* [freerdp](http://www.freerdp.com/)
+* [FreeRDP](http://www.freerdp.com/)
 
 VNC server:
 
