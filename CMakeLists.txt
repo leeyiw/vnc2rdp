@@ -34,3 +34,5 @@ set(VNC2RDP_SRC
 	)
 
 add_executable(vnc2rdp ${VNC2RDP_SRC})
+
+install(TARGETS vnc2rdp DESTINATION bin)
