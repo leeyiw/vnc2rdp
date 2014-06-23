@@ -23,4 +23,4 @@ cd vnc2rdp
 cmake .
 ```
 
-After Makefile is generated, build vnc2rdp with `make`, and install with `make install`. All files installed to your system will be listed in `install_manifest.txt`.
+After Makefile was generated, build vnc2rdp with `make`, and install with `make install`. All files installed to your system will be listed in `install_manifest.txt`.
