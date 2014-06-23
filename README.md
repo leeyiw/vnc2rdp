@@ -29,4 +29,4 @@ After Makefile was generated, build vnc2rdp with `make`, and install with `make 
 
 Here is a screenshot of mstsc.exe connect to RealVNC server:
 
-![screenshot](http://leeyiw.github.io/vnc2rdp/images/screenshot.png)
+![screenshot](http://leeyiw.github.io/vnc2rdp/images/screenshot.png =200x)
