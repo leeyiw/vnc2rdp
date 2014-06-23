@@ -17,7 +17,7 @@ VNC server:
 
 vnc2rdp use [CMake](http://www.cmake.org/) as it's build system. To build vnc2rdp, you need to install CMake first. After CMake was installed, use these commands to generate Makefile:
 
-```
+```bash
 git clone https://github.com/leeyiw/vnc2rdp.git
 cd vnc2rdp
 cmake .
