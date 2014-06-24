@@ -19,7 +19,17 @@ Screenshot of using mstsc.exe connect to RealVNC Server via vnc2rdp:
 
 <img src="http://leeyiw.github.io/vnc2rdp/images/screenshot.png" width="400" />
 
-### Build and install
+### Download
+
+Current release: [vnc2rdp-0.1.0.tar.gz](https://github.com/leeyiw/vnc2rdp/archive/v0.1.0.tar.gz), MD5 checksum: `20d5197e9898ccc3a4947a5a1de39f26`. All releases are listed [**HERE**](https://github.com/leeyiw/vnc2rdp/releases).
+
+To download the latest development tree, use the following command:
+
+```bash
+$ git clone git@github.com:leeyiw/vnc2rdp.git
+```
+
+### Build and Install
 
 vnc2rdp use [CMake](http://www.cmake.org/) as it's build system. To build vnc2rdp, you need to install CMake first. After CMake was installed, use these commands to generate Makefile:
 
