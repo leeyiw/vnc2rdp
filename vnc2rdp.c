@@ -207,6 +207,7 @@ main(int argc, char *argv[])
 	parse_address(argv[optind], opt.vnc_server_ip, sizeof(opt.vnc_server_ip),
 				  &(opt.vnc_server_port));
 	if (opt.vnc_server_ip[0] == '\0' || opt.vnc_server_port == 0) {
+		ERROR("Bad format of server address: %s\n", argv[optind]);
 		usage(argv[0]);
 		exit(EXIT_FAILURE);
 	}
