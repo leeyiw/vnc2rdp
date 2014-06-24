@@ -13,6 +13,12 @@ VNC server:
 
 * RealVNC (depth 24)
 
+### Screenshots
+
+Screenshot of using mstsc.exe connect to RealVNC Server via vnc2rdp:
+
+<img src="http://leeyiw.github.io/vnc2rdp/images/screenshot.png" width="400" />
+
 ### Build and install
 
 vnc2rdp use [CMake](http://www.cmake.org/) as it's build system. To build vnc2rdp, you need to install CMake first. After CMake was installed, use these commands to generate Makefile:
