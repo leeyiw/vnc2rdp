@@ -31,6 +31,7 @@ typedef struct _v2r_session_opt_t {
 	uint16_t vnc_server_port;
 	char vnc_password[8];
 	uint8_t shared;
+	uint8_t viewonly;
 } v2r_session_opt_t;
 
 typedef struct _v2r_session_t {

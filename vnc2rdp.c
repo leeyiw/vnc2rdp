@@ -129,6 +129,8 @@ usage(const char *name)
 "                             desktop with other clients (default)\n"
 "  -n, --noshared             connect to VNC server use exclusive mode, \n"
 "                             by disconnect all other client\n"
+"  -v, --viewonly             disable transfer of mouse and keyboard events \n"
+"                             from the client to the server\n"
 "  -h, --help                 print this help message and exit\n"
 "\n";
 
@@ -149,6 +151,7 @@ main(int argc, char *argv[])
 		{"password", required_argument, NULL, 'p'},
 		{"shared", no_argument, NULL, 's'},
 		{"noshared", no_argument, NULL, 'n'},
+		{"viewonly", no_argument, NULL, 'v'},
 		{"help", no_argument, NULL, 'h'},
 		{NULL, 0, NULL, 0}
 	};
@@ -161,7 +164,7 @@ main(int argc, char *argv[])
 	strcpy(listen_ip, "0.0.0.0");
 	listen_port = 3389;
 
-	while ((ch = getopt_long(argc, argv, "l:p:snh", longopts, NULL)) != -1) {
+	while ((ch = getopt_long(argc, argv, "l:p:snvh", longopts, NULL)) != -1) {
 		switch (ch) {
 		case 'l':
 			parse_address(optarg, listen_ip, sizeof(listen_ip), &listen_port);
@@ -174,6 +177,9 @@ main(int argc, char *argv[])
 			break;
 		case 'n':
 			noshared = 1;
+			break;
+		case 'v':
+			opt.viewonly = 1;
 			break;
 		case 'h':
 		case '?':

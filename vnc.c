@@ -541,6 +541,11 @@ fail:
 int
 v2r_vnc_send_key_event(v2r_vnc_t *v, uint8_t down_flag, uint32_t key)
 {
+	/* if 'viewonly' is specified, don't send keyboard event to server */
+	if (v->session->opt->viewonly) {
+		return 0;
+	}
+
 	/* send KeyEvent message */
 	v2r_packet_reset(v->packet);
 	/* message-type */
@@ -560,6 +565,11 @@ int
 v2r_vnc_send_pointer_event(v2r_vnc_t *v, uint8_t btn_mask,
 						   uint16_t x_pos, uint16_t y_pos)
 {
+	/* if 'viewonly' is specified, don't send pointer event to server */
+	if (v->session->opt->viewonly) {
+		return 0;
+	}
+
 	/* send PointerEvent message */
 	v2r_packet_reset(v->packet);
 	/* message-type */
