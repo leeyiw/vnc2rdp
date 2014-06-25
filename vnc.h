@@ -73,6 +73,12 @@ typedef struct _v2r_vnc_t {
 	uint8_t depth;
 	uint8_t big_endian_flag;
 	uint8_t true_colour_flag;
+	uint16_t red_max;
+	uint16_t green_max;
+	uint16_t blue_max;
+	uint8_t red_shift;
+	uint8_t green_shift;
+	uint8_t blue_shift;
 
 	v2r_session_t *session;
 } v2r_vnc_t;

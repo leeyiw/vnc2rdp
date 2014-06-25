@@ -118,6 +118,56 @@ fail:
 }
 
 static int
+v2r_vnc_recv_server_init(v2r_vnc_t *v)
+{
+	if (v2r_vnc_recv(v) == -1) {
+		goto fail;
+	}
+	V2R_PACKET_READ_UINT16_BE(v->packet, v->framebuffer_width);
+	V2R_PACKET_READ_UINT16_BE(v->packet, v->framebuffer_height);
+	V2R_PACKET_READ_UINT8(v->packet, v->bits_per_pixel);
+	V2R_PACKET_READ_UINT8(v->packet, v->depth);
+	V2R_PACKET_READ_UINT8(v->packet, v->big_endian_flag);
+	V2R_PACKET_READ_UINT8(v->packet, v->true_colour_flag);
+	V2R_PACKET_READ_UINT16_BE(v->packet, v->red_max);
+	V2R_PACKET_READ_UINT16_BE(v->packet, v->green_max);
+	V2R_PACKET_READ_UINT16_BE(v->packet, v->blue_max);
+	V2R_PACKET_READ_UINT8(v->packet, v->red_shift);
+	V2R_PACKET_READ_UINT8(v->packet, v->green_shift);
+	V2R_PACKET_READ_UINT8(v->packet, v->blue_shift);
+	v2r_log_info("server framebuffer size: %dx%d", v->framebuffer_width,
+				 v->framebuffer_height);
+	v2r_log_info("server bpp: %d, depth: %d, big_endian: %d, true_colour: %d, "
+				 "red_max: %d, green_max: %d, blue_max: %d, "
+				 "red_shift: %d, green_shift: %d, blue_shift: %d",
+				 v->bits_per_pixel, v->depth, v->big_endian_flag,
+				 v->true_colour_flag, v->red_max, v->green_max, v->blue_max,
+				 v->red_shift, v->green_shift, v->blue_shift);
+
+	/* set big_endian_flag to 0 because RDP use little endian */
+	v->big_endian_flag = 0;
+
+	/* set colour shift to RDP order */
+	switch (v->depth) {
+	case 24:
+		v->red_shift = 16;
+		v->green_shift = 8;
+		v->blue_shift = 0;
+		break;
+	case 16:
+		v->red_shift = 11;
+		v->green_shift = 5;
+		v->blue_shift = 0;
+		break;
+	}
+
+	return 0;
+
+fail:
+	return -1;
+}
+
+static int
 v2r_vnc_build_conn(v2r_vnc_t *v)
 {
 	/* receive ProtocolVersion */
@@ -161,20 +211,9 @@ v2r_vnc_build_conn(v2r_vnc_t *v)
 	}
 
 	/* recv ServerInit message */
-	if (v2r_vnc_recv(v) == -1) {
+	if (v2r_vnc_recv_server_init(v) == -1) {
 		goto fail;
 	}
-	V2R_PACKET_READ_UINT16_BE(v->packet, v->framebuffer_width);
-	V2R_PACKET_READ_UINT16_BE(v->packet, v->framebuffer_height);
-	V2R_PACKET_READ_UINT8(v->packet, v->bits_per_pixel);
-	V2R_PACKET_READ_UINT8(v->packet, v->depth);
-	V2R_PACKET_READ_UINT8(v->packet, v->big_endian_flag);
-	V2R_PACKET_READ_UINT8(v->packet, v->true_colour_flag);
-	v2r_log_info("server framebuffer size: %dx%d", v->framebuffer_width,
-				 v->framebuffer_height);
-	v2r_log_info("server bits_per_pixel: %d, depth: %d, big_endian_flag: %d, "
-				 "true_colour_flag: %d", v->bits_per_pixel, v->depth,
-				 v->big_endian_flag, v->true_colour_flag);
 
 	/* send SetPixelFormat message */
 	v2r_packet_reset(v->packet);
@@ -183,25 +222,25 @@ v2r_vnc_build_conn(v2r_vnc_t *v)
 	V2R_PACKET_WRITE_UINT8(v->packet, 0);
 	V2R_PACKET_WRITE_UINT8(v->packet, 0);
 	/* bits-per-pixel */
-	V2R_PACKET_WRITE_UINT8(v->packet, 32);
+	V2R_PACKET_WRITE_UINT8(v->packet, v->bits_per_pixel);
 	/* depth */
-	V2R_PACKET_WRITE_UINT8(v->packet, 24);
+	V2R_PACKET_WRITE_UINT8(v->packet, v->depth);
 	/* big-endian-flag */
-	V2R_PACKET_WRITE_UINT8(v->packet, 0);
+	V2R_PACKET_WRITE_UINT8(v->packet, v->big_endian_flag);
 	/* true-colour-flag */
-	V2R_PACKET_WRITE_UINT8(v->packet, 1);
+	V2R_PACKET_WRITE_UINT8(v->packet, v->true_colour_flag);
 	/* red-max */
-	V2R_PACKET_WRITE_UINT16_BE(v->packet, 255);
+	V2R_PACKET_WRITE_UINT16_BE(v->packet, v->red_max);
 	/* green-max */
-	V2R_PACKET_WRITE_UINT16_BE(v->packet, 255);
+	V2R_PACKET_WRITE_UINT16_BE(v->packet, v->green_max);
 	/* blue-max */
-	V2R_PACKET_WRITE_UINT16_BE(v->packet, 255);
+	V2R_PACKET_WRITE_UINT16_BE(v->packet, v->blue_max);
 	/* red-shift */
-	V2R_PACKET_WRITE_UINT8(v->packet, 16);
+	V2R_PACKET_WRITE_UINT8(v->packet, v->red_shift);
 	/* green-shift */
-	V2R_PACKET_WRITE_UINT8(v->packet, 8);
+	V2R_PACKET_WRITE_UINT8(v->packet, v->green_shift);
 	/* blue-shift */
-	V2R_PACKET_WRITE_UINT8(v->packet, 0);
+	V2R_PACKET_WRITE_UINT8(v->packet, v->blue_shift);
 	/* padding */
 	V2R_PACKET_WRITE_UINT8(v->packet, 0);
 	V2R_PACKET_WRITE_UINT8(v->packet, 0);
@@ -281,6 +320,9 @@ v2r_vnc_destory(v2r_vnc_t *v)
 	if (v->packet != NULL) {
 		v2r_packet_destory(v->packet);
 	}
+	if (v->buffer != NULL) {
+		free(v->buffer);
+	}
 	free(v);
 }
 
@@ -288,13 +330,22 @@ static int
 v2r_vnc_process_raw_encoding(v2r_vnc_t *v, uint16_t x, uint16_t y,
 							 uint16_t w, uint16_t h)
 {
+	uint16_t left, top, right, bottom, width, height, i;
+	uint32_t data_size, line_size, rdp_line_size, rdp_data_size;
+	uint32_t max_line_per_packet, line_per_packet;
 	const uint32_t max_byte_per_packet = 8192;
 
-	uint16_t left, top, right, bottom, width, height, i;
-	uint32_t data_size = w * h * 4;
-	uint32_t line_size = w * 4;
-	uint32_t max_line_per_packet = max_byte_per_packet / line_size;
-	uint32_t line_per_packet;
+	/* VNC bitmap size */
+	data_size = w * h * v->bits_per_pixel / 8;
+	/* VNC bitmap row size */
+	line_size = w * v->bits_per_pixel / 8;
+	/* RDP bitmap row should contains a multiple of four bytes */
+	rdp_line_size = (line_size % 4) ? ((line_size / 4) + 1) * 4 : line_size;
+	/* RDP bitmap size */
+	rdp_data_size = rdp_line_size * h;
+	/* send at most max_line_per_packet line to RDP client in a RDP bitmap
+	 * update PDU */
+	max_line_per_packet = max_byte_per_packet / rdp_line_size;
 
 	/* if data size is larger than vnc packet's buffer, 
 	 * init a new packet with a larger buffer */
@@ -305,24 +356,25 @@ v2r_vnc_process_raw_encoding(v2r_vnc_t *v, uint16_t x, uint16_t y,
 			goto fail;
 		}
 	}
-	if (v2r_vnc_recv1(v, data_size) == -1) {
-		goto fail;
-	}
-
-	if (line_size > v->buffer_size) {
-		v->buffer_size = line_size;
+	/* and realloc a new buffer for VNC image upside down */
+	if (rdp_data_size > v->buffer_size) {
+		v->buffer_size = rdp_data_size;
 		v->buffer = (uint8_t *)realloc(v->buffer, v->buffer_size);
 		if (v->buffer == NULL) {
 			v2r_log_error("failed to allocate memory for swap buffer");
 			goto fail;
 		}
 	}
-	for (i = 0; i < h / 2; i++) {
-		memcpy(v->buffer, v->packet->data + i * line_size, line_size);
-		memcpy(v->packet->data + i * line_size,
-			   v->packet->data + (h - i - 1) * line_size,
+
+	/* receive VNC bitmap data */
+	if (v2r_vnc_recv1(v, data_size) == -1) {
+		goto fail;
+	}
+
+	for (i = 0; i < h; i++) {
+		memcpy(v->buffer + (h - i - 1) * rdp_line_size,
+			   v->packet->data + i * line_size,
 			   line_size);
-		memcpy(v->packet->data + (h - i - 1) * line_size, v->buffer, line_size);
 	}
 
 /*
@@ -353,9 +405,9 @@ v2r_vnc_process_raw_encoding(v2r_vnc_t *v, uint16_t x, uint16_t y,
 		height = line_per_packet;
 		if (v2r_rdp_send_bitmap_update(v->session->rdp,
 									   left, top, right, bottom,
-									   width, height, 32,
-									   line_size * line_per_packet,
-									   v->packet->data + i * line_size) == -1) {
+									   width, height, v->bits_per_pixel,
+									   rdp_line_size * line_per_packet,
+									   v->buffer + i * rdp_line_size) == -1) {
 			goto fail;
 		}
 		i += line_per_packet;
