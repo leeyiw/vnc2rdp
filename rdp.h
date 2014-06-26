@@ -128,6 +128,8 @@ extern int v2r_rdp_send_bitmap_update(v2r_rdp_t *r, uint16_t left, uint16_t top,
 									  uint16_t width, uint16_t height,
 									  uint16_t bpp, uint16_t bitmap_length,
 									  uint8_t *data);
+extern int v2r_rdp_send_palette_update(v2r_rdp_t *r, uint32_t number_colors,
+									   uint8_t (*palette_entries)[3]);
 extern int v2r_rdp_send_scrblt_order(v2r_rdp_t *r, uint16_t left, uint16_t top,
 									 uint16_t width, uint16_t height,
 									 uint16_t x_src, uint16_t y_src);

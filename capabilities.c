@@ -58,7 +58,7 @@ v2r_cap_write_bitmap_cap(v2r_rdp_t *r, v2r_packet_t *p)
 	/* lengthCapability */
 	V2R_PACKET_WRITE_UINT16_LE(p, 29);
 	/* preferredBitsPerPixel */
-	V2R_PACKET_WRITE_UINT16_LE(p, 32);
+	V2R_PACKET_WRITE_UINT16_LE(p, r->session->vnc->bpp);
 	/* receive1BitPerPixel */
 	V2R_PACKET_WRITE_UINT16_LE(p, 0x0001);
 	/* receive4BitsPerPixel */

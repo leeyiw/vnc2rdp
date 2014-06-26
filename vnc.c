@@ -167,6 +167,9 @@ v2r_vnc_recv_server_init(v2r_vnc_t *v)
 		v->blue_shift = 0;
 		v->bpp = 15;
 		break;
+	case 8:
+		v->bpp = 8;
+		break;
 	}
 
 	return 0;
@@ -506,6 +509,43 @@ fail:
 }
 
 static int
+v2r_vnc_process_set_colour_map_entries(v2r_vnc_t *v)
+{
+	uint16_t i, first_colour, n_colours, red, green, blue;
+
+	if (v2r_vnc_recv1(v, 5) == -1) {
+		goto fail;
+	}
+	V2R_PACKET_SEEK(v->packet, 1);
+	V2R_PACKET_READ_UINT16_BE(v->packet, first_colour);
+	V2R_PACKET_READ_UINT16_BE(v->packet, n_colours);
+	v2r_log_info("set colour map entries with first_colour: %d, n_colours: %d",
+				 first_colour, n_colours);
+	if (v2r_vnc_recv1(v, n_colours * 6) == -1) {
+		goto fail;
+	}
+	for (i = 0; i < n_colours; i++) {
+		V2R_PACKET_READ_UINT16_LE(v->packet, red);
+		V2R_PACKET_READ_UINT16_LE(v->packet, green);
+		V2R_PACKET_READ_UINT16_LE(v->packet, blue);
+		v->colour_map[first_colour + i][0] = red;
+		v->colour_map[first_colour + i][1] = green;
+		v->colour_map[first_colour + i][2] = blue;
+	}
+
+	if (v2r_rdp_send_palette_update(v->session->rdp,
+									RFB_COLOUR_MAP_ENTRIES_SIZE,
+									v->colour_map) == -1) {
+		goto fail;
+	}
+
+	return 0;
+
+fail:
+	return -1;
+}
+
+static int
 v2r_vnc_process_server_cut_text(v2r_vnc_t *v)
 {
 	uint32_t length;
@@ -538,6 +578,11 @@ v2r_vnc_process(v2r_vnc_t *v)
 	switch (msg_type) {
 	case RFB_FRAMEBUFFER_UPDATE:
 		if (v2r_vnc_process_framebuffer_update(v) == -1) {
+			goto fail;
+		}
+		break;
+	case RFB_SET_COLOUR_MAP_ENTRIES:
+		if (v2r_vnc_process_set_colour_map_entries(v) == -1) {
 			goto fail;
 		}
 		break;

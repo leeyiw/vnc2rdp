@@ -510,6 +510,40 @@ fail:
 }
 
 int
+v2r_rdp_send_palette_update(v2r_rdp_t *r, uint32_t number_colors,
+							uint8_t (*palette_entries)[3])
+{
+	uint32_t i;
+	share_data_hdr_t hdr;
+
+	v2r_rdp_init_packet(r->packet, sizeof(share_data_hdr_t));
+
+	/* shareDataHeader */
+	hdr.share_ctrl_hdr.type = PDUTYPE_DATAPDU;
+	hdr.pdu_type2 = PDUTYPE2_UPDATE;
+	/* updateType */
+	V2R_PACKET_WRITE_UINT16_LE(r->packet, UPDATETYPE_PALETTE);
+	/* pad2Octets */
+	V2R_PACKET_WRITE_UINT16_LE(r->packet, 0);
+	/* numberColors */
+	V2R_PACKET_WRITE_UINT32_LE(r->packet, number_colors);
+	/* paletteEntries */
+	V2R_PACKET_WRITE_N(r->packet, palette_entries,
+					   number_colors * sizeof(*palette_entries));
+
+	/* send packet */
+	V2R_PACKET_END(r->packet);
+	if (v2r_rdp_send(r, r->packet, &hdr) == -1) {
+		goto fail;
+	}
+
+	return 0;
+
+fail:
+	return -1;
+}
+
+int
 v2r_rdp_send_scrblt_order(v2r_rdp_t *r, uint16_t left, uint16_t top,
 						   uint16_t width, uint16_t height,
 						   uint16_t x_src, uint16_t y_src)

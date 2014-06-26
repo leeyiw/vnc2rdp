@@ -60,6 +60,8 @@
 #define RFB_ENCODING_CURSOR				-239
 #define RFB_ENCODING_DESKTOP_SIZE		-223
 
+#define RFB_COLOUR_MAP_ENTRIES_SIZE		256
+
 typedef struct _v2r_vnc_t {
 	int fd;
 	v2r_packet_t *packet;
@@ -81,6 +83,7 @@ typedef struct _v2r_vnc_t {
 	uint8_t blue_shift;
 
 	uint16_t bpp;					/**< bits-per-pixel send to RDP client */
+	uint8_t colour_map[RFB_COLOUR_MAP_ENTRIES_SIZE][3];
 
 	v2r_session_t *session;
 } v2r_vnc_t;
