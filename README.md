@@ -11,7 +11,7 @@ RDP client:
 
 VNC server:
 
-* RealVNC (depth 24)
+* RealVNC
 
 ### Screenshots
 
