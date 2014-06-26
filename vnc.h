@@ -80,6 +80,8 @@ typedef struct _v2r_vnc_t {
 	uint8_t green_shift;
 	uint8_t blue_shift;
 
+	uint16_t bpp;					/**< bits-per-pixel send to RDP client */
+
 	v2r_session_t *session;
 } v2r_vnc_t;
 

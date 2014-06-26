@@ -153,11 +153,19 @@ v2r_vnc_recv_server_init(v2r_vnc_t *v)
 		v->red_shift = 16;
 		v->green_shift = 8;
 		v->blue_shift = 0;
+		v->bpp = 32;
 		break;
 	case 16:
 		v->red_shift = 11;
 		v->green_shift = 5;
 		v->blue_shift = 0;
+		v->bpp = 16;
+		break;
+	case 15:
+		v->red_shift = 10;
+		v->green_shift = 5;
+		v->blue_shift = 0;
+		v->bpp = 15;
 		break;
 	}
 
@@ -405,7 +413,7 @@ v2r_vnc_process_raw_encoding(v2r_vnc_t *v, uint16_t x, uint16_t y,
 		height = line_per_packet;
 		if (v2r_rdp_send_bitmap_update(v->session->rdp,
 									   left, top, right, bottom,
-									   width, height, v->bits_per_pixel,
+									   width, height, v->bpp,
 									   rdp_line_size * line_per_packet,
 									   v->buffer + i * rdp_line_size) == -1) {
 			goto fail;
