@@ -1,6 +1,11 @@
 cmake_minimum_required (VERSION 2.6)
 project (vnc2rdp C)
 
+# set default build type: Release
+if(NOT CMAKE_BUILD_TYPE)
+	set(CMAKE_BUILD_TYPE "Release")
+endif(NOT CMAKE_BUILD_TYPE)
+
 set(VNC2RDP_SRC
 	capabilities.c
 	capabilities.h

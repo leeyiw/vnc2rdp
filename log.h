@@ -31,8 +31,13 @@
 #define V2R_LOG_ERROR		3
 #define V2R_LOG_FATAL		4
 
+#ifndef NDEBUG
 #define v2r_log_debug(...) \
 	v2r_log(V2R_LOG_DEBUG, __FILE__, __LINE__, __VA_ARGS__)
+#else
+#define v2r_log_debug(...)
+#endif
+
 #define v2r_log_info(...) \
 	v2r_log(V2R_LOG_INFO, __FILE__, __LINE__, __VA_ARGS__)
 #define v2r_log_warn(...) \
