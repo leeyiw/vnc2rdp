@@ -19,6 +19,7 @@
 #ifndef _RDP_H_
 #define _RDP_H_
 
+#include "keymaps.h"
 #include "sec.h"
 #include "session.h"
 
@@ -96,8 +97,13 @@ typedef struct _v2r_rdp_t {
 
 	uint8_t allow_display_updates;
 
+	/* keyboard input variables */
+	v2r_keymap_t *keymap;
+	uint8_t lshift;
+	uint8_t rshift;
+
 	v2r_session_t *session;
-}   v2r_rdp_t;
+} v2r_rdp_t;
 
 typedef struct _share_ctrl_hdr_t {
 	uint16_t total_length;

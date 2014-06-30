@@ -1,18 +1,18 @@
 #include "keymaps.h"
 
-keymap_t keymap[128] = {
+static v2r_keymap_t keymap_us[128] = {
 	{0},
-	{1},
-	{2},
-	{3},
-	{4},
-	{5},
-	{6},
-	{7},
-	{8},
-	{9},
-	{10},
-	{11},
+	{0xff1b},
+	{0x0031, 0x0021},
+	{0x0032, 0x0040},
+	{0x0033},
+	{0x0034},
+	{0x0035},
+	{0x0036},
+	{0x0037},
+	{0x0038},
+	{0x0039},
+	{0x0030},
 	{12},
 	{13},
 	{14},
@@ -32,8 +32,8 @@ keymap_t keymap[128] = {
 	{28},
 	{29},
 	{0x0061},
-	{31},
-	{32},
+	{0x0073},
+	{0x0064},
 	{33},
 	{34},
 	{35},
@@ -53,3 +53,19 @@ keymap_t keymap[128] = {
 	{49},
 	{50}
 };
+
+v2r_keymap_t *
+get_keymap_by_layout(uint32_t keyboard_layout)
+{
+	v2r_keymap_t *k = 0;
+
+	switch (keyboard_layout) {
+	case 0x00000804:
+		k = keymap_us;
+		break;
+	default:
+		break;
+	}
+
+	return k;
+}

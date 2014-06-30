@@ -19,10 +19,16 @@
 #ifndef _KEYMAPS_H_
 #define _KEYMAPS_H_
 
-typedef struct _keymap_t {
-	uint32_t normal;
-} keymap_t;
+#include <stdint.h>
 
-extern keymap_t keymap[128];
+#define SCANCODE_LSHIFT			0x2a
+#define SCANCODE_RSHIFT			0x36
+
+typedef struct _v2r_keymap_t {
+	uint32_t normal;
+	uint32_t shift;
+} v2r_keymap_t;
+
+extern v2r_keymap_t *get_keymap_by_layout(uint32_t keyboard_layout);
 
 #endif  // _KEYMAPS_H_

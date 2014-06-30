@@ -368,6 +368,13 @@ v2r_rdp_init(int client_fd, v2r_session_t *s)
 	}
 
 	r->allow_display_updates = ALLOW_DISPLAY_UPDATES;
+	/* find keymap by keyboard layout, if there is no fit keymap currently,
+	 * vnc2rdp will continue work but don't provide keyboard function */
+	r->keymap = get_keymap_by_layout(r->sec->mcs->keyboard_layout);
+	if (r->keymap == NULL) {
+		v2r_log_error("unsupported keyboard layout: 0x%08x",
+					  r->sec->mcs->keyboard_layout);
+	}
 
 	if (v2r_rdp_build_conn(r) == -1) {
 		goto fail;

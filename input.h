@@ -29,6 +29,11 @@
 #define INPUT_EVENT_MOUSE			0x8001
 #define INPUT_EVENT_MOUSEX			0x8002
 
+/* Keyboard Event - keyboardFlags */
+#define KBDFLAGS_EXTENDED			0x0100
+#define KBDFLAGS_DOWN				0x4000
+#define KBDFLAGS_RELEASE			0x8000
+
 /* Mouse Event - pointerFlags */
 #define PTRFLAGS_HWHEEL				0x0400
 #define PTRFLAGS_WHEEL				0x0200

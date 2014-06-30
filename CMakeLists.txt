@@ -13,6 +13,8 @@ set(VNC2RDP_SRC
 	d3des.h
 	input.c
 	input.h
+	keymaps.c
+	keymaps.h
 	license.h
 	log.c
 	log.h

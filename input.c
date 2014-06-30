@@ -38,7 +38,9 @@ v2r_input_process_sync_event(v2r_rdp_t *r, v2r_packet_t *p)
 static int
 v2r_input_process_keyboard_event(v2r_rdp_t *r, v2r_packet_t *p)
 {
+	uint8_t down_flag = 1;
 	uint16_t keyboard_flags, key_code;
+	uint32_t key;
 
 	V2R_PACKET_READ_UINT16_LE(p, keyboard_flags);
 	V2R_PACKET_READ_UINT16_LE(p, key_code);
@@ -47,14 +49,32 @@ v2r_input_process_keyboard_event(v2r_rdp_t *r, v2r_packet_t *p)
 	v2r_log_debug("keyboard_flags: 0x%x, key_code: 0x%x", keyboard_flags,
 				  key_code);
 
-	// TODO XKeycodeToKeysym
+	/* if the keyboard layout is not supported currently, send nothing to
+	 * server */
+	if (r->keymap == NULL) {
+		return 0;
+	}
 
-	//if (v2r_vnc_send_key_event(r->session->vnc, 1, 0x0051) == -1) {
-	//	goto fail;
-	//}
-	//if (v2r_vnc_send_key_event(r->session->vnc, 0, 0x0051) == -1) {
-	//	goto fail;
-	//}
+	down_flag = (keyboard_flags & KBDFLAGS_RELEASE) ? 0 : 1;
+	/* process special scancode */
+	switch (key_code) {
+	case SCANCODE_LSHIFT:
+		r->lshift = down_flag;
+		break;
+	case SCANCODE_RSHIFT:
+		r->rshift = down_flag;
+		break;
+	default:
+		break;
+	}
+	if (r->lshift || r->rshift) {
+		key = r->keymap[key_code].shift;
+	} else {
+		key = r->keymap[key_code].normal;
+	}
+	if (v2r_vnc_send_key_event(r->session->vnc, down_flag, key) == -1) {
+		goto fail;
+	}
 
 	return 0;
 
