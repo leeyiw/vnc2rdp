@@ -21,6 +21,21 @@
 #include "vnc.h"
 
 static int
+v2r_input_process_sync_event(v2r_rdp_t *r, v2r_packet_t *p)
+{
+	uint32_t toggle_flags;
+
+	/* pad2Octets */
+	V2R_PACKET_SEEK_UINT16(p);
+	/* toggleFlags */
+	V2R_PACKET_READ_UINT32_LE(p, toggle_flags);
+
+	v2r_log_debug("toggle_flags: 0x%x", toggle_flags);
+
+	return 0;
+}
+
+static int
 v2r_input_process_keyboard_event(v2r_rdp_t *r, v2r_packet_t *p)
 {
 	uint16_t keyboard_flags, key_code;
@@ -119,7 +134,9 @@ v2r_input_process(v2r_rdp_t *r, v2r_packet_t *p)
 		V2R_PACKET_READ_UINT16_LE(p, message_type);
 		switch (message_type) {
 		case INPUT_EVENT_SYNC:
-			V2R_PACKET_SEEK(p, 6);
+			if (v2r_input_process_sync_event(r, p) == -1) {
+				goto fail;
+			}
 			break;
 		case INPUT_EVENT_UNUSED:
 			V2R_PACKET_SEEK(p, 6);
