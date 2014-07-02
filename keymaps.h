@@ -23,6 +23,8 @@
 
 #define SCANCODE_LSHIFT			0x2a
 #define SCANCODE_RSHIFT			0x36
+#define SCANCODE_CAPSLOCK		0x3a
+#define SCANCODE_NUMLOCK		0x45
 
 typedef struct _v2r_keymap_t {
 	uint32_t normal;

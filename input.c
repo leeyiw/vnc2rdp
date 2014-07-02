@@ -39,7 +39,7 @@ static int
 v2r_input_process_keyboard_event(v2r_rdp_t *r, v2r_packet_t *p)
 {
 	uint8_t down_flag = 1;
-	uint16_t keyboard_flags, key_code;
+	uint16_t keyboard_flags, key_code, x11_key_code;
 	uint32_t key;
 
 	V2R_PACKET_READ_UINT16_LE(p, keyboard_flags);
@@ -48,6 +48,13 @@ v2r_input_process_keyboard_event(v2r_rdp_t *r, v2r_packet_t *p)
 
 	v2r_log_debug("keyboard_flags: 0x%x, key_code: 0x%x", keyboard_flags,
 				  key_code);
+
+	/* translate RDP scancode to X11 keycode */
+	if (keyboard_flags && KBDFLAGS_EXTENDED) {
+		x11_key_code = scancode_to_x11_keycode_map[key_code][1];
+	} else {
+		x11_key_code = scancode_to_x11_keycode_map[key_code][0];
+	}
 
 	/* if the keyboard layout is not supported currently, send nothing to
 	 * server */
@@ -63,6 +70,16 @@ v2r_input_process_keyboard_event(v2r_rdp_t *r, v2r_packet_t *p)
 		break;
 	case SCANCODE_RSHIFT:
 		r->rshift = down_flag;
+		break;
+	case SCANCODE_CAPSLOCK:
+		if (down_flag) {
+			r->capslock = !r->capslock;
+		}
+		break;
+	case SCANCODE_NUMLOCK:
+		if (down_flag) {
+			r->numlock = !r->numlock;
+		}
 		break;
 	default:
 		break;
