@@ -21,7 +21,7 @@ Screenshot of using mstsc.exe connect to RealVNC Server via vnc2rdp:
 
 ### Download
 
-Current release: [vnc2rdp-0.1.0.tar.gz](https://github.com/leeyiw/vnc2rdp/archive/v0.1.0.tar.gz), MD5 checksum: `20d5197e9898ccc3a4947a5a1de39f26`. All releases are listed [**HERE**](https://github.com/leeyiw/vnc2rdp/releases).
+Current release: [vnc2rdp-0.2.0.tar.gz](https://github.com/leeyiw/vnc2rdp/archive/v0.2.0.tar.gz), MD5 checksum: `cb232c4f6b51d09545ea1095e095b682`. All releases are listed [**HERE**](https://github.com/leeyiw/vnc2rdp/releases).
 
 To download the latest development tree, use the following command:
 
