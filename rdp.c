@@ -551,6 +551,33 @@ fail:
 }
 
 int
+v2r_rdp_send_play_sound(v2r_rdp_t *r, uint32_t duration, uint32_t frequency)
+{
+	share_data_hdr_t hdr;
+
+	v2r_rdp_init_packet(r->packet, sizeof(share_data_hdr_t));
+
+	/* shareDataHeader */
+	hdr.share_ctrl_hdr.type = PDUTYPE_DATAPDU;
+	hdr.pdu_type2 = PDUTYPE2_PLAY_SOUND;
+	/* duration */
+	V2R_PACKET_WRITE_UINT32_LE(r->packet, duration);
+	/* frequency */
+	V2R_PACKET_WRITE_UINT32_LE(r->packet, frequency);
+
+	/* send packet */
+	V2R_PACKET_END(r->packet);
+	if (v2r_rdp_send(r, r->packet, &hdr) == -1) {
+		goto fail;
+	}
+
+	return 0;
+
+fail:
+	return -1;
+}
+
+int
 v2r_rdp_send_scrblt_order(v2r_rdp_t *r, uint16_t left, uint16_t top,
 						   uint16_t width, uint16_t height,
 						   uint16_t x_src, uint16_t y_src)

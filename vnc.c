@@ -548,7 +548,19 @@ fail:
 static int
 v2r_vnc_process_bell(v2r_vnc_t *v)
 {
+	v2r_log_debug("server ring a bell");
+
+	/* The value of duration 300 and frequency 200 sounds comfortable for a
+	 * bell ring, it can be changed. ant if you change duration too small it
+	 * will be very diffcult to find out there is a bell ring */
+	if (v2r_rdp_send_play_sound(v->session->rdp, 300, 200) == -1) {
+		goto fail;
+	}
+
 	return 0;
+
+fail:
+	return -1;
 }
 
 static int
