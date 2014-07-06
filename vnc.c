@@ -546,6 +546,12 @@ fail:
 }
 
 static int
+v2r_vnc_process_bell(v2r_vnc_t *v)
+{
+	return 0;
+}
+
+static int
 v2r_vnc_process_server_cut_text(v2r_vnc_t *v)
 {
 	uint32_t length;
@@ -583,6 +589,11 @@ v2r_vnc_process(v2r_vnc_t *v)
 		break;
 	case RFB_SET_COLOUR_MAP_ENTRIES:
 		if (v2r_vnc_process_set_colour_map_entries(v) == -1) {
+			goto fail;
+		}
+		break;
+	case RFB_BELL:
+		if (v2r_vnc_process_bell(v) == -1) {
 			goto fail;
 		}
 		break;

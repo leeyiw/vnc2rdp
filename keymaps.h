@@ -23,14 +23,19 @@
 
 #define SCANCODE_LSHIFT			0x2a
 #define SCANCODE_RSHIFT			0x36
+#define SCANCODE_LALT			0x38
 #define SCANCODE_CAPSLOCK		0x3a
 #define SCANCODE_NUMLOCK		0x45
 
 typedef struct _v2r_keymap_t {
-	uint32_t normal;
-	uint32_t shift;
+	uint32_t noshift[256];
+	uint32_t shift[256];
+	uint32_t altgr[256];
+	uint32_t capslock[256];
+	uint32_t shiftcapslock[256];
 } v2r_keymap_t;
 
+extern uint8_t scancode_to_x11_keycode_map[][2];
 extern v2r_keymap_t *get_keymap_by_layout(uint32_t keyboard_layout);
 
 #endif  // _KEYMAPS_H_

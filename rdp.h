@@ -103,6 +103,7 @@ typedef struct _v2r_rdp_t {
 	uint8_t rshift;
 	uint8_t capslock;
 	uint8_t numlock;
+	uint8_t altgr;
 
 	v2r_session_t *session;
 } v2r_rdp_t;

@@ -46,6 +46,12 @@
 #define PTRFLAGS_BUTTON3			0x4000
 #define PTRFLAGS_BUTTON_ALL			0x7000
 
+/* Synchronize Event - toggleFlags */
+#define TS_SYNC_SCROLL_LOCK			0x00000001
+#define TS_SYNC_NUM_LOCK			0x00000002
+#define TS_SYNC_CAPS_LOCK			0x00000004
+#define TS_SYNC_KANA_LOCK			0x00000008
+
 extern int v2r_input_process(v2r_rdp_t *r, v2r_packet_t *p);
 
 #endif  // _INPUT_H_

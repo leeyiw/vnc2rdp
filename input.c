@@ -29,8 +29,10 @@ v2r_input_process_sync_event(v2r_rdp_t *r, v2r_packet_t *p)
 	V2R_PACKET_SEEK_UINT16(p);
 	/* toggleFlags */
 	V2R_PACKET_READ_UINT32_LE(p, toggle_flags);
-
 	v2r_log_debug("toggle_flags: 0x%x", toggle_flags);
+
+	r->capslock = toggle_flags & TS_SYNC_CAPS_LOCK;
+	r->numlock = toggle_flags & TS_SYNC_NUM_LOCK;
 
 	return 0;
 }
@@ -50,7 +52,7 @@ v2r_input_process_keyboard_event(v2r_rdp_t *r, v2r_packet_t *p)
 				  key_code);
 
 	/* translate RDP scancode to X11 keycode */
-	if (keyboard_flags && KBDFLAGS_EXTENDED) {
+	if (keyboard_flags & KBDFLAGS_EXTENDED) {
 		x11_key_code = scancode_to_x11_keycode_map[key_code][1];
 	} else {
 		x11_key_code = scancode_to_x11_keycode_map[key_code][0];
@@ -71,6 +73,8 @@ v2r_input_process_keyboard_event(v2r_rdp_t *r, v2r_packet_t *p)
 	case SCANCODE_RSHIFT:
 		r->rshift = down_flag;
 		break;
+	case SCANCODE_LALT:
+		r->altgr = down_flag;
 	case SCANCODE_CAPSLOCK:
 		if (down_flag) {
 			r->capslock = !r->capslock;
@@ -84,11 +88,28 @@ v2r_input_process_keyboard_event(v2r_rdp_t *r, v2r_packet_t *p)
 	default:
 		break;
 	}
-	if (r->lshift || r->rshift) {
-		key = r->keymap[key_code].shift;
+
+	/* get X11 KeySym by keycode and current status */
+	if ((79 <= x11_key_code) && (x11_key_code <= 91)) {
+		if (r->numlock) {
+			key = r->keymap->shift[x11_key_code];
+		} else {
+			key = r->keymap->noshift[x11_key_code];
+		}
+	} else if (r->lshift || r->rshift) {
+		if (r->capslock) {
+			key = r->keymap->shiftcapslock[x11_key_code];
+		} else {
+			key = r->keymap->shift[x11_key_code];
+		}
+	} else if (r->capslock) {
+		key = r->keymap->capslock[x11_key_code];
+	} else if (r->altgr) {
+		key = r->keymap->altgr[x11_key_code];
 	} else {
-		key = r->keymap[key_code].normal;
+		key = r->keymap->noshift[x11_key_code];
 	}
+
 	if (v2r_vnc_send_key_event(r->session->vnc, down_flag, key) == -1) {
 		goto fail;
 	}
