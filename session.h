@@ -23,10 +23,13 @@
 
 #define MAX_EVENTS					64
 
+struct _v2r_rdp_t;
+struct _v2r_vnc_t;
 typedef struct _v2r_rdp_t v2r_rdp_t;
 typedef struct _v2r_vnc_t v2r_vnc_t;
 
 typedef struct _v2r_session_opt_t {
+	uint32_t encryption_method;
 	char vnc_server_ip[INET_ADDRSTRLEN];
 	uint16_t vnc_server_port;
 	char vnc_password[8];

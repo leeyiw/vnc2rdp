@@ -20,6 +20,7 @@
 #define _SEC_H_
 
 #include "mcs.h"
+#include "session.h"
 
 #define ENCRYPTION_METHOD_NONE				0x00000000
 #define ENCRYPTION_METHOD_40BIT				0x00000001
@@ -33,7 +34,12 @@
 #define ENCRYPTION_LEVEL_HIGH				0x00000003
 #define ENCRYPTION_LEVEL_FIPS				0x00000004
 
+/* Server Security Data - serverRandomLen */
 #define SERVER_RANDOM_LEN					32
+
+/* Server Certificate - certChainVersion */
+#define CERT_CHAIN_VERSION_1			0x00000001
+#define CERT_CHAIN_VERSION_2			0x00000002
 
 #define SEC_EXCHANGE_PKT		0x0001
 #define SEC_TRANSPORT_REQ		0x0002
@@ -53,15 +59,20 @@
 #define SEC_FLAGSHI_VALID		0x8000
 
 typedef struct _v2r_sec_t {
+	v2r_session_t *session;
 	v2r_mcs_t *mcs;
+
+	uint8_t server_random[SERVER_RANDOM_LEN];
 } v2r_sec_t;
 
-extern v2r_sec_t *v2r_sec_init(int client_fd);
+extern v2r_sec_t *v2r_sec_init(int client_fd, v2r_session_t *session);
 extern void v2r_sec_destory(v2r_sec_t *s);
 extern int v2r_sec_recv(v2r_sec_t *s, v2r_packet_t *p, uint16_t *sec_flags,
 						uint16_t *channel_id);
 extern int v2r_sec_send(v2r_sec_t *s, v2r_packet_t *p, uint16_t sec_flags,
 						uint16_t channel_id);
 extern void v2r_sec_init_packet(v2r_packet_t *p);
+extern int v2r_sec_generate_server_random(v2r_sec_t *s);
+extern int v2r_sec_write_server_certificate(v2r_sec_t *s, v2r_packet_t *p);
 
 #endif  // _SEC_H_

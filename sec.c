@@ -18,7 +18,9 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
+#include "log.h"
 #include "sec.h"
 
 static int
@@ -28,7 +30,7 @@ v2r_sec_build_conn(int client_fd, v2r_sec_t *s)
 }
 
 v2r_sec_t *
-v2r_sec_init(int client_fd)
+v2r_sec_init(int client_fd, v2r_session_t *session)
 {
 	v2r_sec_t *s = NULL;
 
@@ -38,7 +40,9 @@ v2r_sec_init(int client_fd)
 	}
 	memset(s, 0, sizeof(v2r_sec_t));
 
-	s->mcs = v2r_mcs_init(client_fd);
+	s->session = session;
+
+	s->mcs = v2r_mcs_init(client_fd, session);
 	if (s->mcs == NULL) {
 		goto fail;
 	}
@@ -106,4 +110,61 @@ v2r_sec_init_packet(v2r_packet_t *p)
 	v2r_mcs_init_packet(p);
 	p->sec = p->current;
 	V2R_PACKET_SEEK(p, 4);
+}
+
+int
+v2r_sec_generate_server_random(v2r_sec_t *s)
+{
+	int i;
+	unsigned int seed;
+	struct timespec tp;
+
+	if (clock_gettime(CLOCK_MONOTONIC_COARSE, &tp) == -1) {
+		v2r_log_error("get current time error: %s", ERRMSG);
+		goto fail;
+	}
+	seed = (unsigned int)tp.tv_nsec;
+	for (i = 0; i < SERVER_RANDOM_LEN; i++) {
+		s->server_random[i] = rand_r(&seed);
+	}
+
+	return 0;
+
+fail:
+	return -1;
+}
+
+int
+v2r_sec_write_server_certificate(v2r_sec_t *s, v2r_packet_t *p)
+{
+	/* Currently we only support server proprietary certificate */
+	uint32_t keylen, bitlen, datalen;
+
+	bitlen = 64 * 8;
+	keylen = bitlen / 8 + 8;
+	datalen = bitlen / 8 - 1;
+
+	/* dwVersion */
+	V2R_PACKET_WRITE_UINT32_LE(p, CERT_CHAIN_VERSION_1);
+	/* dwSigAlgId */
+	V2R_PACKET_WRITE_UINT32_LE(p, 0x00000001);
+	/* dwKeyAlgId */
+	V2R_PACKET_WRITE_UINT32_LE(p, 0x00000001);
+	/* wPublicKeyBlobType */
+	V2R_PACKET_WRITE_UINT16_LE(p, 0x0006);
+	/* wPublicKeyBlobLen */
+	V2R_PACKET_WRITE_UINT16_LE(p, 0);
+	/* PublicKeyBlob */
+	V2R_PACKET_WRITE_UINT16_LE(p, 0);
+	/* magic */
+	V2R_PACKET_WRITE_UINT32_LE(p, 0x31415352);
+	/* keylen */
+	V2R_PACKET_WRITE_UINT32_LE(p, keylen);
+	/* bitlen */
+	V2R_PACKET_WRITE_UINT32_LE(p, bitlen);
+	/* datalen */
+	V2R_PACKET_WRITE_UINT32_LE(p, datalen);
+	/* TODO: fill in the pubExp and modulus field */
+
+	return 0;
 }

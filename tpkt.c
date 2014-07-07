@@ -29,7 +29,7 @@
 #include "tpkt.h"
 
 v2r_tpkt_t *
-v2r_tpkt_init(int client_fd)
+v2r_tpkt_init(int client_fd, v2r_session_t *session)
 {
 	int optval;
 	v2r_tpkt_t *t = NULL;
@@ -39,6 +39,8 @@ v2r_tpkt_init(int client_fd)
 		goto fail;
 	}
 	memset(t, 0, sizeof(v2r_tpkt_t));
+
+	t->session = session;
 
 	t->fd = client_fd;
 	/* disable Negle algorithm */

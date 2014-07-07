@@ -20,15 +20,18 @@
 #define _TPKT_H_
 
 #include "packet.h"
+#include "session.h"
 
 #define TPKT_HEADER_LEN		4
 #define TPKT_VERSION		3
 
 typedef struct _v2r_tpkt_t {
+	v2r_session_t *session;
+
 	int fd;
 } v2r_tpkt_t;
 
-extern v2r_tpkt_t *v2r_tpkt_init(int client_fd);
+extern v2r_tpkt_t *v2r_tpkt_init(int client_fd, v2r_session_t *session);
 extern void v2r_tpkt_destory(v2r_tpkt_t *t);
 extern int v2r_tpkt_recv(v2r_tpkt_t *t, v2r_packet_t *p);
 extern int v2r_tpkt_send(v2r_tpkt_t *t, v2r_packet_t *p);

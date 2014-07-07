@@ -27,6 +27,7 @@
 
 #include "log.h"
 #include "rdp.h"
+#include "sec.h"
 #include "session.h"
 #include "vnc.h"
 
@@ -124,12 +125,14 @@ usage(const char *name)
 "Usage: %s [options] server:port\n"
 "\n"
 "  -l, --listen=ADDRESS       listen address, default: 0.0.0.0:3389\n"
+"  -e, --encryption=METHOD    preferred RDP encryption method, default: none,\n"
+"                             possible values are: none/40bit/56bit/128bit\n"
 "  -p, --password=PASSWORD    VNC server password, for VNC authentication\n"
-"  -s, --shared               connect to VNC server use share mode, share \n"
+"  -s, --shared               connect to VNC server use share mode, share\n"
 "                             desktop with other clients (default)\n"
-"  -n, --noshared             connect to VNC server use exclusive mode, \n"
-"                             by disconnect all other client\n"
-"  -v, --viewonly             disable transfer of mouse and keyboard events \n"
+"  -n, --noshared             connect to VNC server use exclusive mode by\n"
+"                             disconnect all other client\n"
+"  -v, --viewonly             disable transfer of mouse and keyboard events\n"
 "                             from the client to the server\n"
 "  -h, --help                 print this help message and exit\n"
 "\n";
@@ -148,6 +151,7 @@ main(int argc, char *argv[])
 	struct sigaction act;
 	struct option longopts[] = {
 		{"listen", required_argument, NULL, 'l'},
+		{"encryption", required_argument, NULL, 'e'},
 		{"password", required_argument, NULL, 'p'},
 		{"shared", no_argument, NULL, 's'},
 		{"noshared", no_argument, NULL, 'n'},
@@ -163,12 +167,28 @@ main(int argc, char *argv[])
 	/* default listen address is 0.0.0.0:3389 */
 	strcpy(listen_ip, "0.0.0.0");
 	listen_port = 3389;
+	/* default encryption level is none */
+	opt.encryption_method = ENCRYPTION_METHOD_NONE;
 
-	while ((ch = getopt_long(argc, argv, "l:p:snvh", longopts, NULL)) != -1) {
+	while ((ch = getopt_long(argc, argv, "l:e:p:snvh", longopts, NULL)) != -1) {
 		switch (ch) {
 		case 'l':
 			parse_address(optarg, listen_ip, sizeof(listen_ip), &listen_port);
 			break;
+		case 'e':
+			if (strcmp(optarg, "none") == 0) {
+				opt.encryption_method = ENCRYPTION_METHOD_NONE;
+			} else if (strcmp(optarg, "40bit") == 0) {
+				opt.encryption_method = ENCRYPTION_METHOD_40BIT;
+			} else if (strcmp(optarg, "56bit") == 0) {
+				opt.encryption_method = ENCRYPTION_METHOD_56BIT;
+			} else if (strcmp(optarg, "128bit") == 0) {
+				opt.encryption_method = ENCRYPTION_METHOD_128BIT;
+			} else {
+				ERROR("Unknown encryption level: %s\n", optarg);
+				usage(argv[0]);
+				exit(EXIT_FAILURE);
+			}
 		case 'p':
 			strncpy(opt.vnc_password, optarg, sizeof(opt.vnc_password));
 			break;

@@ -92,8 +92,9 @@
 #define ALLOW_DISPLAY_UPDATES					0x01
 
 typedef struct _v2r_rdp_t {
-	v2r_packet_t *packet;
+	v2r_session_t *session;
 	v2r_sec_t *sec;
+	v2r_packet_t *packet;
 
 	uint8_t allow_display_updates;
 
@@ -104,8 +105,6 @@ typedef struct _v2r_rdp_t {
 	uint8_t capslock;
 	uint8_t numlock;
 	uint8_t altgr;
-
-	v2r_session_t *session;
 } v2r_rdp_t;
 
 typedef struct _share_ctrl_hdr_t {
@@ -127,7 +126,7 @@ typedef struct _share_data_hdr_t {
 	uint16_t compressed_length;
 } __attribute__ ((packed)) share_data_hdr_t;
 
-extern v2r_rdp_t *v2r_rdp_init(int client_fd, v2r_session_t *s);
+extern v2r_rdp_t *v2r_rdp_init(int client_fd, v2r_session_t *session);
 extern void v2r_rdp_destory(v2r_rdp_t *r);
 extern void v2r_rdp_init_packet(v2r_packet_t *p, uint16_t offset);
 extern int v2r_rdp_recv(v2r_rdp_t *r, v2r_packet_t *p, share_data_hdr_t *hdr);

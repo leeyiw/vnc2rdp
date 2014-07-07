@@ -345,7 +345,7 @@ fail:
 }
 
 v2r_rdp_t *
-v2r_rdp_init(int client_fd, v2r_session_t *s)
+v2r_rdp_init(int client_fd, v2r_session_t *session)
 {
 	v2r_rdp_t *r = NULL;
 
@@ -355,14 +355,14 @@ v2r_rdp_init(int client_fd, v2r_session_t *s)
 	}
 	memset(r, 0, sizeof(v2r_rdp_t));
 
-	r->session = s;
+	r->session = session;
 
 	r->packet = v2r_packet_init(65535);
 	if (r->packet == NULL) {
 		goto fail;
 	}
 
-	r->sec = v2r_sec_init(client_fd);
+	r->sec = v2r_sec_init(client_fd, session);
 	if (r->sec == NULL) {
 		goto fail;
 	}

@@ -19,6 +19,7 @@
 #ifndef _MCS_H_
 #define _MCS_H_
 
+#include "session.h"
 #include "x224.h"
 
 #define BER_TAG_CONNECT_INITIAL			0x7F65
@@ -58,10 +59,14 @@ typedef struct _channel_def_t {
 } channel_def_t;
 
 typedef struct _v2r_mcs_t {
+	v2r_session_t *session;
 	v2r_x224_t *x224;
 
 	/* client core data */
 	uint32_t keyboard_layout;
+
+	/* client security data */
+	uint32_t encryption_methods;
 
 	/* client network data */
 	uint32_t channel_count;
@@ -69,7 +74,7 @@ typedef struct _v2r_mcs_t {
 	uint16_t user_channel_id;
 } v2r_mcs_t;
 
-extern v2r_mcs_t *v2r_mcs_init(int client_fd);
+extern v2r_mcs_t *v2r_mcs_init(int client_fd, v2r_session_t *session);
 extern void v2r_mcs_destory(v2r_mcs_t *m);
 extern int v2r_mcs_recv(v2r_mcs_t *m, v2r_packet_t *p, uint8_t *choice,
 						uint16_t *channel_id);

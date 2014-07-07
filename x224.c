@@ -118,7 +118,7 @@ fail:
 }
 
 v2r_x224_t *
-v2r_x224_init(int client_fd)
+v2r_x224_init(int client_fd, v2r_session_t *session)
 {
 	v2r_x224_t *x = NULL;
 
@@ -128,7 +128,9 @@ v2r_x224_init(int client_fd)
 	}
 	memset(x, 0, sizeof(v2r_x224_t));
 
-	x->tpkt = v2r_tpkt_init(client_fd);
+	x->session = session;
+
+	x->tpkt = v2r_tpkt_init(client_fd, session);
 	if (x->tpkt == NULL) {
 		goto fail;
 	}

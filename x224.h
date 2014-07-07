@@ -36,16 +36,18 @@
 #define PROTOCOL_HYBRID				0x00000002
 #define PROTOCOL_HYBRID_EX			0x00000008
 
-#include "tpkt.h"
 #include "packet.h"
+#include "session.h"
+#include "tpkt.h"
 
 typedef struct _v2r_x224_t {
+	v2r_session_t *session;
 	v2r_tpkt_t *tpkt;
 
 	uint32_t requested_protocols;
 } v2r_x224_t;
 
-extern v2r_x224_t *v2r_x224_init(int client_fd);
+extern v2r_x224_t *v2r_x224_init(int client_fd, v2r_session_t *session);
 extern void v2r_x224_destory(v2r_x224_t *x);
 extern int v2r_x224_recv(v2r_x224_t *x, v2r_packet_t *p);
 extern int v2r_x224_send(v2r_x224_t *x, v2r_packet_t *p);
