@@ -21,11 +21,14 @@
 
 #include <stdint.h>
 
-#define SCANCODE_LSHIFT			0x2a
-#define SCANCODE_RSHIFT			0x36
-#define SCANCODE_LALT			0x38
-#define SCANCODE_CAPSLOCK		0x3a
-#define SCANCODE_NUMLOCK		0x45
+#define SCANCODE_LSHIFT							0x2a
+#define SCANCODE_RSHIFT							0x36
+#define SCANCODE_LALT							0x38
+#define SCANCODE_CAPSLOCK						0x3a
+#define SCANCODE_NUMLOCK						0x45
+
+#define KEYBOARD_LAYOUT_US						0x00000409
+#define KEYBOARD_LAYOUT_CHINESE_SIMPLIFIED		0x00000804
 
 typedef struct _v2r_keymap_t {
 	uint32_t noshift[256];

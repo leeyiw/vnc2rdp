@@ -29,7 +29,7 @@ v2r_input_process_sync_event(v2r_rdp_t *r, v2r_packet_t *p)
 	V2R_PACKET_SEEK_UINT16(p);
 	/* toggleFlags */
 	V2R_PACKET_READ_UINT32_LE(p, toggle_flags);
-	v2r_log_debug("toggle_flags: 0x%x", toggle_flags);
+	v2r_log_debug("synchronize event with toggle_flags: 0x%x", toggle_flags);
 
 	r->capslock = toggle_flags & TS_SYNC_CAPS_LOCK;
 	r->numlock = toggle_flags & TS_SYNC_NUM_LOCK;

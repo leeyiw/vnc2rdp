@@ -240,6 +240,8 @@ get_keymap_by_layout(uint32_t keyboard_layout)
 	v2r_keymap_t *k = 0;
 
 	switch (keyboard_layout) {
+	case KEYBOARD_LAYOUT_US:
+	case KEYBOARD_LAYOUT_CHINESE_SIMPLIFIED:
 	default:
 		k = &keymap_us;
 		break;
