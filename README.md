@@ -12,6 +12,7 @@ RDP client:
 VNC server:
 
 * RealVNC
+* TightVNC (v1.3)
 
 ### Screenshots
 
