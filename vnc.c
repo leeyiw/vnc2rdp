@@ -168,6 +168,7 @@ v2r_vnc_recv_server_init(v2r_vnc_t *v)
 		v->bpp = 15;
 		break;
 	case 8:
+		v->true_colour_flag = 0;
 		v->bpp = 8;
 		break;
 	}
