@@ -74,8 +74,9 @@ typedef struct _v2r_mcs_t {
 	uint16_t user_channel_id;
 } v2r_mcs_t;
 
-extern v2r_mcs_t *v2r_mcs_init(int client_fd, v2r_session_t *session);
+extern v2r_mcs_t *v2r_mcs_init(v2r_session_t *session);
 extern void v2r_mcs_destory(v2r_mcs_t *m);
+extern int v2r_mcs_build_conn(v2r_mcs_t *m, int client_fd);
 extern int v2r_mcs_recv(v2r_mcs_t *m, v2r_packet_t *p, uint8_t *choice,
 						uint16_t *channel_id);
 extern int v2r_mcs_send(v2r_mcs_t *m, v2r_packet_t *p, uint8_t choice,

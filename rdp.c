@@ -289,10 +289,14 @@ v2r_rdp_send_font_map(v2r_rdp_t *r, v2r_packet_t *p)
 	return v2r_rdp_send(r, p, &hdr);
 }
 
-static int
-v2r_rdp_build_conn(v2r_rdp_t *r)
+int
+v2r_rdp_build_conn(v2r_rdp_t *r, int client_fd)
 {
 	v2r_packet_t *p = NULL;
+
+	if (v2r_sec_build_conn(r->sec, client_fd) == -1) {
+		goto fail;
+	}
 
 	p = v2r_packet_init(8192);
 	if (p == NULL) {
@@ -345,7 +349,7 @@ fail:
 }
 
 v2r_rdp_t *
-v2r_rdp_init(int client_fd, v2r_session_t *session)
+v2r_rdp_init(v2r_session_t *session)
 {
 	v2r_rdp_t *r = NULL;
 
@@ -356,17 +360,14 @@ v2r_rdp_init(int client_fd, v2r_session_t *session)
 	memset(r, 0, sizeof(v2r_rdp_t));
 
 	r->session = session;
-
 	r->packet = v2r_packet_init(65535);
 	if (r->packet == NULL) {
 		goto fail;
 	}
-
-	r->sec = v2r_sec_init(client_fd, session);
+	r->sec = v2r_sec_init(session);
 	if (r->sec == NULL) {
 		goto fail;
 	}
-
 	r->allow_display_updates = ALLOW_DISPLAY_UPDATES;
 	/* find keymap by keyboard layout, if there is no fit keymap currently,
 	 * vnc2rdp will continue work but don't provide keyboard function */
@@ -374,10 +375,6 @@ v2r_rdp_init(int client_fd, v2r_session_t *session)
 	if (r->keymap == NULL) {
 		v2r_log_error("unsupported keyboard layout: 0x%08x",
 					  r->sec->mcs->keyboard_layout);
-	}
-
-	if (v2r_rdp_build_conn(r) == -1) {
-		goto fail;
 	}
 
 	return r;

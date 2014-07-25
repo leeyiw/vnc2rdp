@@ -47,17 +47,24 @@ static const uint8_t signature[64] = {
 };
 static const uint8_t signature_zero_padding[8] = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-}
+};
 
-static int
-v2r_sec_build_conn(int client_fd, v2r_sec_t *s)
+int
+v2r_sec_build_conn(v2r_sec_t *s, int client_fd)
 {
+	if (v2r_mcs_build_conn(s->mcs, client_fd) == -1) {
+		goto fail;
+	}
+
 	/* TODO receive Client Security Exchange PDU */
 	return 0;
+
+fail:
+	return -1;
 }
 
 v2r_sec_t *
-v2r_sec_init(int client_fd, v2r_session_t *session)
+v2r_sec_init(v2r_session_t *session)
 {
 	v2r_sec_t *s = NULL;
 
@@ -69,12 +76,8 @@ v2r_sec_init(int client_fd, v2r_session_t *session)
 
 	s->session = session;
 
-	s->mcs = v2r_mcs_init(client_fd, session);
+	s->mcs = v2r_mcs_init(session);
 	if (s->mcs == NULL) {
-		goto fail;
-	}
-
-	if (v2r_sec_build_conn(client_fd, s) == -1) {
 		goto fail;
 	}
 

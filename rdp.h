@@ -126,8 +126,9 @@ typedef struct _share_data_hdr_t {
 	uint16_t compressed_length;
 } __attribute__ ((packed)) share_data_hdr_t;
 
-extern v2r_rdp_t *v2r_rdp_init(int client_fd, v2r_session_t *session);
+extern v2r_rdp_t *v2r_rdp_init(v2r_session_t *session);
 extern void v2r_rdp_destory(v2r_rdp_t *r);
+extern int v2r_rdp_build_conn(v2r_rdp_t *r, int client_fd);
 extern void v2r_rdp_init_packet(v2r_packet_t *p, uint16_t offset);
 extern int v2r_rdp_recv(v2r_rdp_t *r, v2r_packet_t *p, share_data_hdr_t *hdr);
 extern int v2r_rdp_send(v2r_rdp_t *r, v2r_packet_t *p, share_data_hdr_t *hdr);

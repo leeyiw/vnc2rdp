@@ -179,9 +179,11 @@ fail:
 	return -1;
 }
 
-static int
-v2r_vnc_build_conn(v2r_vnc_t *v)
+int
+v2r_vnc_build_conn(v2r_vnc_t *v, int server_fd)
 {
+	v->fd = server_fd;
+
 	/* receive ProtocolVersion */
 	if (v2r_vnc_recv(v) == -1) {
 		goto fail;
@@ -289,7 +291,7 @@ fail:
 }
 
 v2r_vnc_t *
-v2r_vnc_init(int server_fd, v2r_session_t *s)
+v2r_vnc_init(v2r_session_t *s)
 {
 	v2r_vnc_t *v = NULL;
 
@@ -300,18 +302,12 @@ v2r_vnc_init(int server_fd, v2r_session_t *s)
 	memset(v, 0, sizeof(v2r_vnc_t));
 
 	v->session = s;
-
-	v->fd = server_fd;
 	v->packet = v2r_packet_init(65535);
 	if (v->packet == NULL) {
 		goto fail;
 	}
 	v->buffer = NULL;
 	v->buffer_size = 0;
-
-	if (v2r_vnc_build_conn(v) == -1) {
-		goto fail;
-	}
 
 	return v;
 

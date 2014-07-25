@@ -462,11 +462,15 @@ fail:
 	return -1;
 }
 
-static int
-v2r_mcs_build_conn(v2r_mcs_t *m)
+int
+v2r_mcs_build_conn(v2r_mcs_t *m, int client_fd)
 {
 	uint16_t i = 0;
 	v2r_packet_t *p = NULL;
+
+	if (v2r_x224_build_conn(m->x224, client_fd) == -1) {
+		goto fail;
+	}
 
 	p = v2r_packet_init(8192);
 	if (p == NULL) {
@@ -513,7 +517,7 @@ fail:
 }
 
 v2r_mcs_t *
-v2r_mcs_init(int client_fd, v2r_session_t *session)
+v2r_mcs_init(v2r_session_t *session)
 {
 	v2r_mcs_t *m = NULL;
 
@@ -525,12 +529,8 @@ v2r_mcs_init(int client_fd, v2r_session_t *session)
 
 	m->session = session;
 
-	m->x224 = v2r_x224_init(client_fd, session);
+	m->x224 = v2r_x224_init(session);
 	if (m->x224 == NULL) {
-		goto fail;
-	}
-
-	if (v2r_mcs_build_conn(m) == -1) {
 		goto fail;
 	}
 

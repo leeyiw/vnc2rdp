@@ -65,8 +65,9 @@ typedef struct _v2r_sec_t {
 	uint8_t server_random[SERVER_RANDOM_LEN];
 } v2r_sec_t;
 
-extern v2r_sec_t *v2r_sec_init(int client_fd, v2r_session_t *session);
+extern v2r_sec_t *v2r_sec_init(v2r_session_t *session);
 extern void v2r_sec_destory(v2r_sec_t *s);
+extern int v2r_sec_build_conn(v2r_sec_t *s, int client_fd);
 extern int v2r_sec_recv(v2r_sec_t *s, v2r_packet_t *p, uint16_t *sec_flags,
 						uint16_t *channel_id);
 extern int v2r_sec_send(v2r_sec_t *s, v2r_packet_t *p, uint16_t sec_flags,

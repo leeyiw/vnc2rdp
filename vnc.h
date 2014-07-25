@@ -88,8 +88,9 @@ typedef struct _v2r_vnc_t {
 	v2r_session_t *session;
 } v2r_vnc_t;
 
-extern v2r_vnc_t *v2r_vnc_init(int server_fd, v2r_session_t *s);
+extern v2r_vnc_t *v2r_vnc_init(v2r_session_t *s);
 extern void v2r_vnc_destory(v2r_vnc_t *v);
+extern int v2r_vnc_build_conn(v2r_vnc_t *v, int server_fd);
 extern int v2r_vnc_process(v2r_vnc_t *v);
 extern int v2r_vnc_send_fb_update_req(v2r_vnc_t *v, uint8_t incremental,
 									  uint16_t x_pos, uint16_t y_pos,

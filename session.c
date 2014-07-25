@@ -27,7 +27,7 @@
 #include "vnc.h"
 
 v2r_session_t *
-v2r_session_init(int client_fd, int server_fd, const v2r_session_opt_t *opt)
+v2r_session_init(const v2r_session_opt_t *opt)
 {
 	v2r_session_t *s = NULL;
 
@@ -40,7 +40,7 @@ v2r_session_init(int client_fd, int server_fd, const v2r_session_opt_t *opt)
 	s->opt = opt;
 
 	/* connect to VNC server */
-	s->vnc = v2r_vnc_init(server_fd, s);
+	s->vnc = v2r_vnc_init(s);
 	if (s->vnc == NULL) {
 		v2r_log_error("connect to vnc server error");
 		goto fail;
@@ -48,7 +48,7 @@ v2r_session_init(int client_fd, int server_fd, const v2r_session_opt_t *opt)
 	v2r_log_info("connect to vnc server success");
 
 	/* accept RDP connection */
-	s->rdp = v2r_rdp_init(client_fd, s);
+	s->rdp = v2r_rdp_init(s);
 	if (s->rdp == NULL) {
 		v2r_log_error("accept new rdp connection error");
 		goto fail;
@@ -78,6 +78,22 @@ v2r_session_destory(v2r_session_t *s)
 		close(s->epoll_fd);
 	}
 	free(s);
+}
+
+int
+v2r_session_build_conn(v2r_session_t *s, int client_fd, int server_fd)
+{
+	if (v2r_vnc_build_conn(s->vnc, server_fd) == -1) {
+		goto fail;
+	}
+	if (v2r_rdp_build_conn(s->rdp, client_fd) == -1) {
+		goto fail;
+	}
+
+	return 0;
+
+fail:
+	return -1;
 }
 
 void

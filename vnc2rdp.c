@@ -72,9 +72,13 @@ process_connection(int client_fd, const v2r_session_opt_t *opt)
 	}
 
 	/* init session */
-	session = v2r_session_init(client_fd, server_fd, opt);
+	session = v2r_session_init(opt);
 	if (session == NULL) {
 		v2r_log_error("session init failed");
+		goto fail;
+	}
+
+	if (v2r_session_build_conn(session, client_fd, server_fd) == -1) {
 		goto fail;
 	}
 

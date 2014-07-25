@@ -22,13 +22,17 @@
 #include "x224.h"
 #include "tpkt.h"
 
-static int
-v2r_x224_build_conn(v2r_x224_t *x)
+int
+v2r_x224_build_conn(v2r_x224_t *x, int client_fd)
 {
 	v2r_packet_t *p = NULL;
 	uint8_t li = 0, tpdu_code = 0;
 	uint8_t terminated = 0, type = 0, flags = 0;
 	uint16_t length = 0;
+
+	if (v2r_tpkt_build_conn(x->tpkt, client_fd) == -1) {
+		goto fail;
+	}
 
 	p = v2r_packet_init(8192);
 	if (p == NULL) {
@@ -118,7 +122,7 @@ fail:
 }
 
 v2r_x224_t *
-v2r_x224_init(int client_fd, v2r_session_t *session)
+v2r_x224_init(v2r_session_t *session)
 {
 	v2r_x224_t *x = NULL;
 
@@ -130,12 +134,8 @@ v2r_x224_init(int client_fd, v2r_session_t *session)
 
 	x->session = session;
 
-	x->tpkt = v2r_tpkt_init(client_fd, session);
+	x->tpkt = v2r_tpkt_init(session);
 	if (x->tpkt == NULL) {
-		goto fail;
-	}
-
-	if (-1 == v2r_x224_build_conn(x)) {
 		goto fail;
 	}
 
