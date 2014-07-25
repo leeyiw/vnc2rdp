@@ -247,8 +247,8 @@ v2r_mcs_write_server_security_data(v2r_packet_t *p, v2r_mcs_t *m)
 	} else {
 		/* serverRandomLen */
 		V2R_PACKET_WRITE_UINT32_LE(p, 32);
-		/* serverCertLen */
-		V2R_PACKET_WRITE_UINT32_LE(p, 0);
+		/* serverCertLen, the length of server certificate is fixed 184 */
+		V2R_PACKET_WRITE_UINT32_LE(p, 184);
 		/* serverRandom */
 		if (v2r_sec_generate_server_random(m->session->rdp->sec) == -1) {
 			goto fail;
