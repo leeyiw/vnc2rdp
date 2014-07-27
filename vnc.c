@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include <netinet/tcp.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
@@ -182,7 +183,15 @@ fail:
 int
 v2r_vnc_build_conn(v2r_vnc_t *v, int server_fd)
 {
+	int optval = 1;
+
 	v->fd = server_fd;
+
+	/* disable Nagle algorithm */
+	if (setsockopt(v->fd, IPPROTO_TCP, TCP_NODELAY, &optval, sizeof(optval))
+		== -1) {
+		goto fail;
+	}
 
 	/* receive ProtocolVersion */
 	if (v2r_vnc_recv(v) == -1) {

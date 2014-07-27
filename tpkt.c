@@ -16,12 +16,10 @@
  * limitations under the License.
  */
 
-#include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
@@ -67,7 +65,7 @@ v2r_tpkt_build_conn(v2r_tpkt_t *t, int client_fd)
 
 	t->fd = client_fd;
 
-	/* disable Negle algorithm */
+	/* disable Nagle algorithm */
 	if (setsockopt(t->fd, IPPROTO_TCP, TCP_NODELAY, &optval, sizeof(optval))
 		== -1) {
 		goto fail;
